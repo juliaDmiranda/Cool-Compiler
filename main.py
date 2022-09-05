@@ -1,38 +1,80 @@
-import sys
+import re, class_, sys
 
-def printProgramElements():
-    '''
-    Prints each token of the program followed by theirs identifiers  
-    '''
+                                            # Processamento de List #
+
+removeNone = lambda line : list(filter(None, line)) # Remover ''
+
+                                            # Processamento de String #
+
+removeLineComment = lambda line : line.partition('--')[0] # Remover comentários de linha - Retorna string
+
+def removeBlockComment(line):
+    pattern = "([^\"]\\S*|\".+?\")\\s*"
+
+    # Tem (* *)?
+    if (re.match(pattern, line)):
+        
+    # Tem (*
+        # Mais de 1
+            # Raise Erro
+        # 1 
+            # Remove comentário
+            # Marca :Achou comentário de bloco
+    # Tem *)
+        # Mais de 1
+            # Erro
+        # 1 
+            # Verifica se tem comentário acima
+                # Tem
+                    # Remove comentário
+                    # Achou comentário de bloco
+                # não 
+                    # Raise Erro
     pass
 
-def classifyTokens(line):
-    '''
-    Function that receive a line of a Cool program and classify each token of that line
-    '''
-    pass
-    
+spaceSymbols =  lambda line : line.replace("\n", " ").replace("@", " @ ")\
+                .replace(",", " , ").replace('"', ' " ').replace("(", " ( ")\
+                .replace(")"," ) ").replace(";", " ; ").replace("}", " } ")\
+                .replace("{", " { ").replace(":", " : ").replace(".", " . ") # Espaçar símbolos para split - Retorna string
+
+
+# Função para separar tokens de cada linha, mantendo unidas as strings que em Cool são qualquer estrutura na forma "...".
+# Não é aceito como String a utilização '...'
+# Retorna lista contendo tokens, sem tratar comentário em bloco, string
+splitLine = lambda line: removeNone(spaceSymbols(removeLineComment(line)).split(" ")) 
+
 def readProgram(fileName):
     '''
-    Function to read the program in Cool and store in a list wich elements are lines of code
+    Função que lê arquivo de programa escrito em Cool
+    Retorna uma lista de instâncias de Token() para cada linha
     '''
-    code = []
-    with open(fileName, 'r') as file:    
-        line = file.readlines()
+    code = [] # list of tokens
 
-        print(line)
-        '''
-        Considering that the grammer do not make a 
-        restriction about space where you can use 
-        it or not between symbols, I must check if
-        after split strings, there are any digit or special symbol on it
-        My be use regex would make it easier
-        '''
+    with open(fileName, 'r') as file:
+        program = file.readlines()
 
+        for num, line in enumerate(program, start=0):
+            # Remover Comentários
+            removeBlockComment(line)
 
-fileName    = sys.argv[1]
+            temp = splitLine(line) # tokens criados
+            
+        
+        # FORMAR LISTA DE CLASSES
+        # code.append([class_.Token(str, num+1) for str in temp])
 
-identifier = [] # list of dictionary. Think in classify each line in a list to mark the numeration of the line in one take
+    return code
 
-readProgram(fileName)
+# ler arquivo
+    # para cada linha
+        # Ajeitar string
+            # remover comentário
+            # remover \n ()
+
+if __name__ == "__main__":
+    fileName    =  sys.argv[1]
     
+    cd = readProgram(fileName)
+    for i in cd:
+        for j in i:
+            print(j)
