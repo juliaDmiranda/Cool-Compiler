@@ -1,4 +1,5 @@
 from enum import Enum, auto
+import re
 # INT_COMPLEMENT_ID    
 class Ids(Enum):    
     CLASS_ID              =  auto(), "class"         
@@ -37,11 +38,14 @@ class Ids(Enum):
     ATT_ID                =  auto(), "<-"          
     ID_ID                 =  auto(), ">" 
     TRUE_ID               =  auto(), "true"       
-    FALSE_ID              =  auto(), "false"     
+    FALSE_ID              =  auto(), "false"  
+    STRING_ID             =  auto(), "..."   
 
 
     @classmethod
     def match(self, str='oi'):
+        if(str[0] =='"' and str[-1::] == '"'):
+            return self.STRING_ID
         if(str == "false"):
             return self.FALSE_ID
         elif(str == "true"):
@@ -59,4 +63,3 @@ if __name__ == "__main__":
     print(Ids.match("false"))
     print(Ids.match("FAlse"))
     print(Ids.match("ElSe"))
-

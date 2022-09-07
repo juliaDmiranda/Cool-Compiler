@@ -1,80 +1,130 @@
+from hashlib import new
 import re, class_, sys
 
                                             # Processamento de List #
-
 removeNone = lambda line : list(filter(None, line)) # Remover ''
 
+
                                             # Processamento de String #
-
-removeLineComment = lambda line : line.partition('--')[0] # Remover comentários de linha - Retorna string
-
-def removeBlockComment(line):
-    pattern = "([^\"]\\S*|\".+?\")\\s*"
-
-    # Tem (* *)?
-    if (re.match(pattern, line)):
-        
-    # Tem (*
-        # Mais de 1
-            # Raise Erro
-        # 1 
-            # Remove comentário
-            # Marca :Achou comentário de bloco
-    # Tem *)
-        # Mais de 1
-            # Erro
-        # 1 
-            # Verifica se tem comentário acima
-                # Tem
-                    # Remove comentário
-                    # Achou comentário de bloco
-                # não 
-                    # Raise Erro
-    pass
-
-spaceSymbols =  lambda line : line.replace("\n", " ").replace("@", " @ ")\
+spaceSymbols =  lambda line : line.replace("\n", " ").replace("\t", " ").replace("@", " @ ").replace("*", " * ")\
                 .replace(",", " , ").replace('"', ' " ').replace("(", " ( ")\
                 .replace(")"," ) ").replace(";", " ; ").replace("}", " } ")\
-                .replace("{", " { ").replace(":", " : ").replace(".", " . ") # Espaçar símbolos para split - Retorna string
+                .replace("{", " { ").replace(":", " : ").replace(".", " . ").replace("--"," -- ") # Espaçar símbolos para split - Retorna string
 
+removeLineComment = lambda line : line.partition('--')[0] # Remover comentários de linha - Retorna string
+def removeLineComment(line):
+    try:
+        commentSymb = line.index("--")
+        return line[:commentSymb:]
+    except:
+        return line
+searchAsterisk  = False
+searchClose     = False
+openComment     = False
+def removeBlockComments(line):
+    global searchAsterisk
+    global searchClose
+    global openComment
+    newList = []
+    ant = ""
+    # elemento por elemento
+    for token in line:
+        if (searchClose):
+            if(token != ")"):
+                # ignora
+                ant = token
+                openComment = True
+            else:
+                if(ant == "*"):         # anterior é *
+                    # (?)não procura mais *
+                    # não procura mais fecha
+                    searchClose = False
+                    openComment = False
+                else:
+                    ant = token
+        elif(searchAsterisk):
+            if(token == "*"): # sim# proximo é *? 
+                # ignora
+                searchClose     = True # procura fecha
+                searchAsterisk  = False
+            else:# não
+                if(ant=="("):
+                    newList.append("(")     # append (
+                newList.append(token)   # append atual
+                searchAsterisk  = False # não procura mais *
+        else:    # acha (
+            if(token=="("):
+                searchAsterisk = True
+                ant = token
+            else:
+                newList.append(token)
+        
+    if(searchClose):
+        if (openComment):
+            pass
+        else:
+            openComment = True
 
-# Função para separar tokens de cada linha, mantendo unidas as strings que em Cool são qualquer estrutura na forma "...".
-# Não é aceito como String a utilização '...'
-# Retorna lista contendo tokens, sem tratar comentário em bloco, string
-splitLine = lambda line: removeNone(spaceSymbols(removeLineComment(line)).split(" ")) 
+    return newList
+removeComments = lambda line : removeLineComment(removeBlockComments(line))
+
+splitLine = lambda line: line.split(" ") 
+
+stringOpen = False
+def separaString(line):
+    global stringOpen
+    newline = []
+    tempStr = ""
+    # percorre elem a elem
+    for token in line:
+        # é "?
+        if(token != '"'):               # não
+            if(not stringOpen):
+                newline.append(token)       # add na lista
+            else:
+                tempStr     = tempStr + " " + token    # soma string vazia
+        else:                           # é
+            if (not stringOpen):        # se String não aberta
+                tempStr     = tempStr + token    # soma string vazia
+                stringOpen  = True      # marca string aberta
+            else:                       # se string aberta
+                if(stringOpen):
+                    stringOpen  = False     # desmarca String aberta
+                tempStr     = tempStr + " " + token    # soma string vazia
+                newline.append(tempStr) # add str acumulado na lista
+                tempStr = ""            # vazia str de apoio
+    if(stringOpen):
+        newline.append(tempStr)
+    return newline
 
 def readProgram(fileName):
-    '''
-    Função que lê arquivo de programa escrito em Cool
-    Retorna uma lista de instâncias de Token() para cada linha
-    '''
-    code = [] # list of tokens
+    code = [] # list of list of tokens
 
     with open(fileName, 'r') as file:
         program = file.readlines()
 
         for num, line in enumerate(program, start=0):
-            # Remover Comentários
-            removeBlockComment(line)
-
+            # line = removeComments(line)
+            line = spaceSymbols(line)
             temp = splitLine(line) # tokens criados
-            
-        
-        # FORMAR LISTA DE CLASSES
-        # code.append([class_.Token(str, num+1) for str in temp])
-
+            temp = removeNone(temp) # remover ''
+            temp = separaString(temp)
+            temp = removeComments(temp)
+            if len(temp)!=0: # não conta lista vazia
+                code.append([class_.Token(str, num+1) for str in temp])
+        if(openComment):
+            raise Exception("Error! Unclosed block comment")    
+    
     return code
 
-# ler arquivo
-    # para cada linha
-        # Ajeitar string
-            # remover comentário
-            # remover \n ()
+def printToken(tokensID):
+    for i in tokensID:
+        for j in i:
+            print(j)
 
 if __name__ == "__main__":
     fileName    =  sys.argv[1]
     
     cd = readProgram(fileName)
-    for i in cd:
-        for j in i:
-            print(j)
+    print(cd)
+    printToken(cd)
