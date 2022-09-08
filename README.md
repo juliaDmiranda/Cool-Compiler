@@ -5,7 +5,7 @@ O repositório contém a implementação de um compilador da linguagem [Cool](ht
 ## Sobre
 
 Codificado em Python, o compilador deve executar as seguintes etapas:
-- Análise léxica      ✔️
+- [Análise léxica](https://github.com/juliaDmiranda/Cool-Compiler/blob/desenvolvimento/Cool_Compiler_Tokenization.pdf) ✔️ 
 - Análise sintática
 - Análise semântica
 - Geração de código
