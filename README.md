@@ -9,8 +9,4 @@ Codificado em Python, o compilador deve executar as seguintes etapas:
 - Análise sintática
 - Análise semântica
 - Geração de código
-<<<<<<< HEAD
 - Otimização 
-=======
-- Otimização 
->>>>>>> desenvolvimento
