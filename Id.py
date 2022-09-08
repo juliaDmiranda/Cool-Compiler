@@ -1,6 +1,6 @@
 from enum import Enum, auto
 import re
-# INT_COMPLEMENT_ID    
+
 class Ids(Enum):    
     CLASS_ID              =  auto(), "class"         
     SEMICOLON_ID          =  auto(), ";"           
@@ -40,14 +40,18 @@ class Ids(Enum):
     TRUE_ID               =  auto(), "true"       
     FALSE_ID              =  auto(), "false"  
     STRING_ID             =  auto(), "..."   
-
+    DIGITS                =  auto(), "..."
 
     @classmethod
     def match(self, str='oi'):
+        if(str.isdigit()):
+            return self.DIGITS
         if(str[0] =='"' and str[-1::] == '"'):
             return self.STRING_ID
-        if(str == "false"):
+        elif(str == "false"):
             return self.FALSE_ID
+        elif("^[-+]?[0-9]+$" in str):
+            return self.DIGIT
         elif(str == "true"):
             return self.TRUE_ID
         else:
@@ -55,8 +59,6 @@ class Ids(Enum):
                 if (i.value[1] == str):
                     return i
             return self.ID_ID
-
-# class BOOL(Enum):  pass
 
 if __name__ == "__main__":
     print(Ids.match("main"))
