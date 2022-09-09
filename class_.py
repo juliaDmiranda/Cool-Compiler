@@ -1,3 +1,6 @@
+'''
+Classe representante de cada token
+'''
 from Id import Ids
 import re
 
