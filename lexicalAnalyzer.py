@@ -1,11 +1,11 @@
+'''
+Programa que realiza a análise léxica de um código em Cool
+'''
 from hashlib import new
 import re, class_, sys
 
-                                            # Processamento de List #
 removeNone = lambda line : list(filter(None, line)) # Remover ''
 
-
-                                            # Processamento de String #
 spaceSymbols =  lambda line : line.replace("\n", " ").replace("@", " @ ").replace("*", " * ")\
                 .replace(",", " , ").replace('"', ' " ').replace("(", " ( ").replace("/", " / ")\
                 .replace(")"," ) ").replace(";", " ; ").replace("}", " } ")\
