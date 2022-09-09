@@ -1,3 +1,6 @@
+'''
+Estrutura para identificadores dos tokens
+'''
 from enum import Enum, auto
 import re
 
