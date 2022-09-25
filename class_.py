@@ -22,7 +22,7 @@ class Token():
     def classify(self):
         '''The method that classifies a given token in an identifier'''
 
-        if( self.token == "false" or self.token == "true"):
+        if( self.token == "false" or self.token == "true" or self.token[0].isupper()):
             return Ids.match(self.token)
         else:
             return Ids.match(self.token.lower())

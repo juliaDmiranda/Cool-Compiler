@@ -3,6 +3,7 @@ Estrutura para identificadores dos tokens
 '''
 from enum import Enum, auto
 import re
+from token import TYPE_COMMENT
 
 class Ids(Enum):    
     CLASS_ID              =  auto(), "class"         
@@ -44,6 +45,7 @@ class Ids(Enum):
     FALSE_ID              =  auto(), "false"  
     STRING_ID             =  auto(), "..."   
     DIGITS                =  auto(), "..."
+    TYPE                  =  auto(), "..."
 
     @classmethod
     def match(self, str='oi'):
@@ -51,20 +53,20 @@ class Ids(Enum):
             return self.DIGITS
         if(str[0] =='"' and str[-1::] == '"'):
             return self.STRING_ID
-        elif(str == "false"):
-            return self.FALSE_ID
         elif("^[-+]?[0-9]+$" in str):
             return self.DIGIT
-        elif(str == "true"):
-            return self.TRUE_ID
+        if (str[0].isupper()):
+                return self.TYPE
         else:
             for i in self: 
                 if (i.value[1] == str):
                     return i
-            return self.ID_ID
+
+            else:
+                return self.ID_ID
 
 if __name__ == "__main__":
     print(Ids.match("main"))
     print(Ids.match("false"))
     print(Ids.match("FAlse"))
-    print(Ids.match("ElSe"))
+    print(Ids.match("Main"))
