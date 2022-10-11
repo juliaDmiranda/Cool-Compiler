@@ -12,6 +12,9 @@ def showErrors(err):
             print(e)
 
 def switchTokens(l):
+    if(l == []):
+        print("No code recoganized")
     # primeira chamada do programa deve conter uma class
-    myProgram = SF.program(l)
-    showErrors(myProgram.err)
+    else:
+        myProgram = SF.program(l)
+        showErrors(myProgram.err)

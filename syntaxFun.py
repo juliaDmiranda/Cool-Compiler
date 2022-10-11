@@ -1,11 +1,5 @@
-from enum import Enum, auto
-from msilib import PID_PAGECOUNT
-from re import M
-
-from black import mypyc_attr
 from Id import Ids
 import Program_class as PC
-import class_
 
 def IF_func ():
     myProgram.nexToken(myProgram.situation)
@@ -29,6 +23,11 @@ def IF_func ():
     return myProgram
 
 def WHILE_func():
+    '''
+    SOBRE
+    -----------
+    Função auxiliar de expr() para expressão WHILE
+    '''
     myProgram.nexToken(myProgram.situation)
     if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
     
@@ -45,6 +44,11 @@ def WHILE_func():
     return myProgram
 
 def LET_func():
+    '''
+    SOBRE
+    -----------
+    Função auxiliar de expr() para expressão LET
+    '''
     myProgram.nexToken(myProgram.situation)
     if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
     while True:
@@ -72,7 +76,19 @@ def LET_func():
     if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
     return expr()
 
+def expr_line():
+    # modificados para remover recursão a esquerda # +, -, *, /, <, <=, =
+    while(myProgram.token.idEqual(Ids.PLUS_ID) or myProgram.token.idEqual(Ids.MINUS_ID) or myProgram.token.idEqual(Ids.ASTERISK_ID) or myProgram.token.idEqual(Ids.F_SLASH_ID) or myProgram.token.idEqual(Ids.LESS_THAN_ID) or myProgram.token.idEqual(Ids.LESS_THAN_EQUAL_TO_ID) or myProgram.token.idEqual(Ids.EQUAL_TO_ID)):
+        myProgram.nexToken(PC.SIG.TokenFound)
+        if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+        expr()
+        
 def CASE_func():
+    '''
+    SOBRE
+    -----------
+    Função auxiliar de expr() para expressão CASE
+    '''
     myProgram.nexToken(myProgram.situation)
     if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
     expr()
@@ -93,7 +109,13 @@ def CASE_func():
     checkToken_N_reportSyntError(f"line {myProgram.token.line}:  'esac' was expected to close CASE structure",
     Ids.ESAC_ID) 
     if(myProgram.situation == PC.SIG.EndOfProgram): return True
+
 def ID_EXPR_func(err=[]):
+    '''
+    SOBRE
+    -----------
+    Função auxiliar de expr() para expressão (exp, exp...)
+    '''
     while True:
         myProgram.nexToken(PC.SIG.TokenFound)
         if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
@@ -105,8 +127,8 @@ def ID_EXPR_func(err=[]):
     checkToken_N_reportSyntError(err,
     Ids.C_PARENTHESIS) # Verifiicar )
     if(myProgram.situation == PC.SIG.EndOfProgram): return True
-    
     return False
+
 def checkToken_N_reportSyntError(errSTR, ID_comp, isFormal = False):
     '''
     SOBRE
@@ -197,13 +219,32 @@ def dotCheck():
     else:
         myProgram.undo()
         if(ID_EXPR_func(f"line {myProgram.token.line}: At last one expression expected in expression expr[@TYPE]...")) : return myProgram
+
 def expr():
+    '''
+    SOBRE
+    -------------
+    Função principal para tratar de expressões.
+    Basicamente a estrutura é dividida em busca por expressões atômicas e não atômicas.
+    
+    - Expressões Atômicas: são simples, são símbolos terminais da gramática
+
+    - Expressões Não Atômicas: são expressões que possuem símbolos não teminais(pensando na notação de gramática)
+        - Dentro de funções 
+
+    RETORNO
+    -------------
+    Até o momento retorna um objeto da classe Program_class.
+    Espera-se adaptar para retornar algo relacionado a árvore semântica.
+    '''
+    if(myProgram.token.idEqual(Ids.SEMICOLON_ID)):
+        return myProgram
     # procurar terminais
-    if(myProgram.token.idEqual(Ids.INTEGER_ID) or myProgram.token.idEqual(Ids.STRING_ID)):
+    elif(myProgram.token.idEqual(Ids.INTEGER_ID) or myProgram.token.idEqual(Ids.STRING_ID)):
         myProgram.nexToken(PC.SIG.TokenFound)
         if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
         return True
-    if(myProgram.token.idEqual(Ids.TRUE_ID) or myProgram.token.idEqual(Ids.FALSE_ID)):
+    elif(myProgram.token.idEqual(Ids.TRUE_ID) or myProgram.token.idEqual(Ids.FALSE_ID)):
         myProgram.nexToken(PC.SIG.TokenFound)
         if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
         return True
@@ -228,6 +269,7 @@ def expr():
                 
                     return myProgram
                 if(ID_EXPR_func(f"line {myProgram.token.line}: ')' was expected to close 'ID(expr, expr)' structure")): return myProgram
+                return True
             elif(myProgram.token.idEqual(Ids.AT_ID)):
                 myProgram.nexToken(PC.SIG.TokenFound)
                 if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
@@ -250,6 +292,7 @@ def expr():
                 if(not dotCheck()): return myProgram
                 return myProgram
             else:
+                expr_line() # adicionar ao fim de todas as outras expressões
                 return myProgram
         elif(myProgram.token.idEqual(Ids.NEW_ID)): # new
             myProgram.nexToken(PC.SIG.TokenFound)
@@ -263,6 +306,7 @@ def expr():
             myProgram.nexToken(PC.SIG.TokenFound)
             if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
             expr()
+            # bug2()
             checkToken_N_reportSyntError(f"line {myProgram.token.line}: ')' was expected to close '(expr)' structure",
             Ids.C_PARENTHESIS)# Verifica )
             if(myProgram.situation == PC.SIG.EndOfProgram): return True
@@ -276,7 +320,7 @@ def expr():
         elif(myProgram.token.idEqual(Ids.WHILE_ID)):# WHILE
             return WHILE_func()
         elif(myProgram.token.idEqual(Ids.LET_ID)): # LET
-            return LET_func()
+            LET_func()
         # CASE
         elif(myProgram.token.idEqual(Ids.CASE_ID)):
             return CASE_func()
@@ -288,9 +332,12 @@ def expr():
                 if(myProgram.token.idEqual(Ids.C_BRACKETS)):
                     myProgram.nexToken(PC.SIG.TokenFound)
                     if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+                    return True
+
                 ret = expr()
+
                 if(not ret):
-                    checkToken_N_reportSyntError(f"line {myProgram.token.line}:"+ '}' + "expected to close multiple expression statement", Ids.SEMICOLON_ID)
+                    checkToken_N_reportSyntError(f"line {myProgram.token.line}:"+ '}' + "expected to close multiple expression statement", Ids.C_BRACKETS)
                     if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
                     return
                 checkToken_N_reportSyntError(f"line {myProgram.token.line}: ';' expected in multiple expression statement", Ids.SEMICOLON_ID)
@@ -300,12 +347,25 @@ def expr():
             myProgram.nexToken(PC.SIG.TokenFound)
             if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
             return expr()
+        elif(myProgram.token.idEqual(Ids.SEMICOLON_ID)):
+            return myProgram
         else: # se não for nenhuma das opções erro
             myProgram.setPs_err(f"line {myProgram.token.line}: Expression expected")
             myProgram.addError()  
             return False  
+        # por while para ficar conferindo até dar não "."
+        while (myProgram.token.idEqual(Ids.DOT_ID)):
+            myProgram.nexToken(PC.SIG.TokenFound)
+            if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+            expr()
+        return True
 
 def TYPE_ATT_EXPR_verif(err1, err2=[]):
+    '''
+    SOBRE
+    --------
+    Função para verificar estrutura TYPE <- expr
+    '''
     # verificar TYPE
     checkToken_N_reportSyntError(err1,
     Ids.TYPE_ID)
@@ -319,18 +379,22 @@ def TYPE_ATT_EXPR_verif(err1, err2=[]):
         if(myProgram.situation == PC.SIG.EndOfProgram): return
         expr()
     else:
-        myProgram.addError()
-        # myProgram.nexToken(myProgram.situation)
+        return myProgram
 
 def ATTRIBUTE_func():
+    '''
+    SOBRE
+    ----------
+    Função que trata da estrutura de um atributo 
+    '''
     err1 = f"line {myProgram.token.line}: " + "No atribute Type declared"
     TYPE_ATT_EXPR_verif(err1)
 
 def formal():
     '''
-    Após verificação de formal, retorna:
-    True: se a lista ficou vazia
-    False: se a lista não ficou vazia
+    SOBRE
+    --------
+    Função que verifica estrutura de parÂmetro
     '''
     # Verifica ID
     checkToken_N_reportSyntError(f"line {myProgram.token.line}: ID not founded. Formal expected",
@@ -398,6 +462,8 @@ def METHOD_func():
             expr()
             if(not myProgram.token.idEqual(Ids.DOT_ID)):
                 if(not myProgram.token.idEqual(Ids.SEMICOLON_ID)):
+                    myProgram.setPs_err(f"line {myProgram.token.line}: {';'} expected in the end of an expression when more than one expression are added in a method")
+                    myProgram.addError()
                     break
                 myProgram.nexToken(myProgram.situation) # pula ';'
     
@@ -407,7 +473,6 @@ def METHOD_func():
                 myProgram.nexToken(myProgram.situation)
                 if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram 
 
- 
         # verifica } fecha expr múltiplas
         checkToken_N_reportSyntError(f"line {myProgram.token.line}: {'}'} expected. You have more than one expr",
         Ids.C_BRACKETS)
@@ -486,7 +551,7 @@ def CLASS_func ():
         while True:
             FEATURE_func()
             # verifica ;
-            checkToken_N_reportSyntError(f"line {myProgram.token.line}:" + " ';'" + f" expected in the end of a feature",
+            checkToken_N_reportSyntError(f"line {myProgram.token.line}:" + " ';'" + f" expected in the end of a feature on {myProgram.token.token}",
             Ids.SEMICOLON_ID)
             if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
             
