@@ -6,6 +6,8 @@ import re
 from token import TYPE_COMMENT
 
 class Ids(Enum):    
+    AT_ID               =  auto(), "@"
+    THEN_ID               =  auto(), "then"
     CLASS_ID              =  auto(), "class"         
     SEMICOLON_ID          =  auto(), ";"           
     QUOTE_ID              =  auto(), '"'           
@@ -39,24 +41,25 @@ class Ids(Enum):
     C_BRACKETS            =  auto(), "}"           
     O_PARENTHESIS         =  auto(), "("           
     C_PARENTHESIS         =  auto(), ")"           
-    ATT_ID                =  auto(), "<-"          
+    ATT_ID                =  auto(), "<-"  
+    F_ATT_ID              =  auto(), "=>"        
     ID_ID                 =  auto(), ">" 
     TRUE_ID               =  auto(), "true"       
     FALSE_ID              =  auto(), "false"  
     STRING_ID             =  auto(), "..."   
-    DIGITS                =  auto(), "..."
-    TYPE                  =  auto(), "..."
+    INTEGER_ID            =  auto(), "..."
+    TYPE_ID                 =  auto(), "..."
 
     @classmethod
     def match(self, str='oi'):
         if(str.isdigit()):
-            return self.DIGITS
+            return self.INTEGER_ID
         if(str[0] =='"' and str[-1::] == '"'):
             return self.STRING_ID
-        elif("^[-+]?[0-9]+$" in str):
-            return self.DIGIT
+        elif(str[0] =='"'  or str[-1::] == '"'):
+            return self.STRING_ID
         if (str[0].isupper()):
-                return self.TYPE
+                return self.TYPE_ID
         else:
             for i in self: 
                 if (i.value[1] == str):
