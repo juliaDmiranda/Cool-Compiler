@@ -1,22 +1,20 @@
 import class_
-import syntaxFunc
+import syntaxFun as SF
+import Program_class as PC
 
-# verifica class
-def CLASS_ID_func(line, err=[]):
-    pass
+def showErrors(err):
+    aux = [a for a in  err if not a==[]]
+    if aux==[]:
+        print("No syntax error in the program")
+    else:
+        print("Syntax Error\n"+('-'*30)+"\n")
+        for e in aux:
+            print(e)
 
-def switchTokens(line, err=[]):
-    for token in line:
-        try:
-            # func = globals()[token.id.value[:-2:]+"_func"] # para quando a função está no módulo
-            func = getattr(syntaxFunc, [token.id.value[:-2:]+"_func"])
-            line, err = func(line, err)
-        except KeyError:
-            pass 
-            # função coringa
-            # por que daria Esse erro?
-        # cada chamada retorna a lista consumida atualizada
-        # ao fim chamamos novamente a função passando essa linha atualizada
-        # se ao sair a linha estiver vazia()
-            # sai do for antes que bagunce tudo
-        pass
+def switchTokens(l):
+    if(l == []):
+        print("No code recoganized")
+    # primeira chamada do programa deve conter uma class
+    else:
+        myProgram = SF.program(l)
+        showErrors(myProgram.err)
