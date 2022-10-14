@@ -10,6 +10,12 @@ class Token():
         self.id = self.classify()
         self.line = line
     
+    def idEqual(self, object) -> bool:
+        if (self.id == object):
+            return True
+        else:
+            return False
+    
     def __str__ (self):
         return f"{self.token} : {self.id.name}, line {self.line}\n"
 
@@ -22,7 +28,7 @@ class Token():
     def classify(self):
         '''The method that classifies a given token in an identifier'''
 
-        if( self.token == "false" or self.token == "true" or self.token[0].isupper()):
+        if( self.token == "false" or self.token == "true" or self.token[0].isupper() and self.token.lower()!="class"):
             return Ids.match(self.token)
         else:
             return Ids.match(self.token.lower())
