@@ -12,7 +12,7 @@ def IF_func ():
     expr()
     # Verifica ELSE
     checkToken_N_reportSyntError(f"line {myProgram.token.line}: 'else' was expected in 'if' structure",
-    Ids.THEN_ID)
+    Ids.ELSE_ID)
     if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
     expr()
     # Verifica Fi
@@ -62,14 +62,27 @@ def LET_func():
         Ids.COLON_ID)
         if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
 
-        # verifica TYPE e resto
-        err1 = "line {myProgram.token.line}: TYPE expected on 'let' structure"
-        TYPE_ATT_EXPR_verif(err1)
+        # # verifica TYPE e resto
+        # err1 = f"line {myProgram.token.line}: TYPE expected on 'let' structure"
+        # TYPE_ATT_EXPR_verif(err1)
 
-        if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+        # if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+
+        # verificar TYPE
+        checkToken_N_reportSyntError(f"line {myProgram.token.line}: TYPE expected on 'let' structure",
+        Ids.TYPE_ID)
+
+        if(myProgram.token.idEqual(Ids.ATT_ID)):
+            myProgram.nexToken(myProgram.situation)
+            if(myProgram.situation == PC.SIG.EndOfProgram): return
+            expr()
 
         if(not myProgram.token.idEqual(Ids.COMMA_ID)):
             break
+        
+        myProgram.nexToken(myProgram.situation)
+        if(myProgram.situation == PC.SIG.EndOfProgram): return
+
     # Verifica in
     checkToken_N_reportSyntError(f"line {myProgram.token.line}: 'in' was expected to close 'let' structure",
     Ids.IN_ID)
@@ -220,6 +233,31 @@ def dotCheck():
         myProgram.undo()
         if(ID_EXPR_func(f"line {myProgram.token.line}: At last one expression expected in expression expr[@TYPE]...")) : return myProgram
 
+def ID_AT_func():
+    myProgram.nexToken(PC.SIG.TokenFound)
+
+    if(myProgram.situation == PC.SIG.EndOfProgram): return True
+    
+    # verificar TYPE
+    checkToken_N_reportSyntError(f"line {myProgram.token.line}: TYPE expected in expression expr[@TYPE]...",
+    Ids.TYPE_ID)
+    if(myProgram.situation == PC.SIG.EndOfProgram): return True
+    
+    # verificar .
+    checkToken_N_reportSyntError(f"line {myProgram.token.line}: '.' expected in expression expr[@TYPE]...",
+    Ids.DOT_ID)
+    if(myProgram.situation == PC.SIG.EndOfProgram): return True
+    
+    if(not dotCheck()): return True
+    
+    return False
+
+def ID_DOT_func():
+    myProgram.nexToken(PC.SIG.TokenFound)
+    if(myProgram.situation == PC.SIG.EndOfProgram): return True
+    if(not dotCheck()): return True
+    return False
+
 def expr():
     '''
     SOBRE
@@ -267,29 +305,15 @@ def expr():
 
                     if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
                 
-                    return myProgram
-                if(ID_EXPR_func(f"line {myProgram.token.line}: ')' was expected to close 'ID(expr, expr)' structure")): return myProgram
+                    # return myProgram
+                elif(ID_EXPR_func(f"line {myProgram.token.line}: ')' was expected to close 'ID(expr, expr)' structure")): return myProgram
                 return True
             elif(myProgram.token.idEqual(Ids.AT_ID)):
-                myProgram.nexToken(PC.SIG.TokenFound)
-                if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-                
-                # verificar TYPE
-                checkToken_N_reportSyntError(f"line {myProgram.token.line}: TYPE expected in expression expr[@TYPE]...",
-                Ids.TYPE_ID)
-                if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-                
-                # verificar .
-                checkToken_N_reportSyntError(f"line {myProgram.token.line}: '.' expected in expression expr[@TYPE]...",
-                Ids.DOT_ID)
-                if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-                
-                if(not dotCheck()): return myProgram
+                if(ID_AT_func()):
+                    return myProgram
                 return myProgram
             elif(myProgram.token.idEqual(Ids.DOT_ID)):
-                myProgram.nexToken(PC.SIG.TokenFound)
-                if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-                if(not dotCheck()): return myProgram
+                if(ID_DOT_func()): return myProgram
                 return myProgram
             else:
                 expr_line() # adicionar ao fim de todas as outras expressões
@@ -365,6 +389,9 @@ def TYPE_ATT_EXPR_verif(err1, err2=[]):
     SOBRE
     --------
     Função para verificar estrutura TYPE <- expr
+
+    Como a função é utilizada em mais de um contexto, 
+    é necessário que a mansagem de erro seja personalizada
     '''
     # verificar TYPE
     checkToken_N_reportSyntError(err1,
