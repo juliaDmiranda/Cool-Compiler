@@ -573,10 +573,10 @@ def CLASS_func ():
     return CLASS_func()
 
 def program(line):
-    # global cont
-    global myProgram
     myProgram = PC.Program(line)
-    
-    ret = CLASS_func()
 
-    return myProgram
+    data = [myProgram, 0, 0]
+
+    data = CLASS_func(data)
+
+    return data
