@@ -747,6 +747,40 @@ def DOT_func(data):
     data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
 
     return data
+
+def expr_line(data):
+    """
+    SOBRE
+    -------------
+    Função que trata recursão à esquerda presente em algumas expressões da linguagem Cool.
+    Um exemplo disso é a estrutura:
+                  expr + expr
+
+    PARÂMETROS
+    -------------
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    """
+    while True:
+        # modificados para remover recursão a esquerda # +, -, *, /, <, <=, =
+        if(data[0].token.idEqual(Ids.PLUS_ID) or data[0].token.idEqual(Ids.MINUS_ID) or data[0].token.idEqual(Ids.ASTERISK_ID) or data[0].token.idEqual(Ids.F_SLASH_ID) or data[0].token.idEqual(Ids.LESS_THAN_ID) or data[0].token.idEqual(Ids.LESS_THAN_EQUAL_TO_ID) or data[0].token.idEqual(Ids.EQUAL_TO_ID)):
+            data = OPs_func(data)
+        elif(data[0].token.idEqual(Ids.AT_ID)): # concerteza ao ter um @ terá de ter TYPE.ID depois
+            data = AT_func(data)
+
+        elif(data[0].token.idEqual(Ids.DOT_ID)): # concerteza ao ter um . terá de ter ID depois
+            data = DOT_func(data)
+        else: break
+
+    data = expr(data)
+    return data
+    
         
 def expr(data):
     '''
