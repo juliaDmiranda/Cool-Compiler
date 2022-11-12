@@ -1,5 +1,40 @@
 from Id import Ids
 import Program_class as PC
+def ATT_func(data):
+    """
+    SOBRE
+    -------------
+    Função para tratar expressão ID <- expr, que representa uma atribuição.
+    Trata-se de uma parte de uma expressão com recusão a direita.
+    
+    PARÂMETROS
+    -------------
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    Na estrutura da árvore semântica, ID <- expr gera
+                    (ID)   1 raiz
+                      |
+                     expr   1
+    """
+    # cria raiz
+
+    # consome token lido
+    data[0].nexToken(PC.SIG.TokenFound)
+    if(data[0].situation == PC.SIG.EndOfProgram):  return data #return data
+
+    # cria filho 1
+        
+    data = expr(data) # chama expressão
+
+    data = expr_line(data) # recursão à esquerda
+
+    return data
 
 def IF_func(data):
     """
