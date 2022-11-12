@@ -382,6 +382,171 @@ def ISVOID_func(data):
     data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
 
     return data
+def NOT_func(data):
+    """
+    SOBRE
+    -------------
+    Função para tratar expressão NOT. Trata-se de uma expressão com recusão a direita.
+
+    NOT --> expr
+    
+    PARÂMETROS
+    -------------
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    Na estrutura da árvore semântica, uma expressão NOT gera
+                    (NOT)   1 raiz
+                      |
+                     expr   1 filho
+    """
+    # cria raiz
+    data[0].nexToken(PC.SIG.TokenFound)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+        
+    # cria filho 1
+        
+    data = expr(data) # chama expressão
+
+    data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+
+    return data
+
+def TIDE_func(data):
+    """
+    SOBRE
+    -------------
+    Função para tratar expressão TIDE. Trata-se de uma expressão com recusão a direita.
+
+    TIDE --> expr
+    
+    PARÂMETROS
+    -------------
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    Na estrutura da árvore semântica, uma expressão TIDE gera
+                    (TIDE)   1 raiz
+                      |
+                     expr   1 filho
+    """
+    # cria raiz
+    data[0].nexToken(PC.SIG.TokenFound)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+        
+    # cria filho 1
+        
+    data = expr(data) # chama expressão
+
+    data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+
+    return data
+
+def O_PARENTHESIS_func(data):
+    """
+    SOBRE
+    -------------
+    Função para tratar expressão (expr).
+    Trata-se de uma expressão com recusão a direita
+
+    PARÂMETROS
+    -------------
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    Na estrutura da árvore semântica, uma expressão (expr) gera
+                    ('(')   1 raiz
+                      |
+                     expr   1 filho
+    """
+     # cria raiz
+        
+    # Consumir token lido
+    data[0].nexToken(PC.SIG.TokenFound)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+    
+     # cria filho 1
+    while True:    
+        data = expr(data) # chama expressão
+
+        data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+
+        if(not data[0].token.idEqual(Ids.COMMA_ID)):
+            break
+                
+        data[0].nexToken(PC.SIG.TokenFound)
+        if(data[0].situation == PC.SIG.EndOfProgram): return data
+    checkToken_N_reportSyntError(f"line {data[0].token.line}: ')' was expected to close '(expr)' structure",
+    Ids.C_PARENTHESIS, data)# Verifica )
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+
+    return data
+
+def O_BRACKETS_func(data):
+    """
+    SOBRE
+    -------------
+    Função para tratar expressão {[[expr;]]^+}.
+    Trata-se de uma expressão com recusão a direita
+    
+    PARÂMETROS
+    -------------
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    Na estrutura da árvore semântica, uma expressão {[[expr;]]^+} gera
+                    ('{')   1 raiz
+                      |
+                     expr   1 ou mais filhos
+    """
+    # cria raiz
+        
+    # Consumir token lido
+    data[0].nexToken(PC.SIG.TokenFound)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+
+    # mais de uma expressão
+    # então não precisa conferir nesse ponto se na primeira chamada é uma {
+    # Já se espera que seja uma expressão a seguir
+    while True:
+        # cria Nnésimo filho 
+        data = expr(data) # chama expressão
+
+        data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+
+        checkToken_N_reportSyntError(f"line {data[0].token.line}: ';' expected in multiple expression statement", Ids.SEMICOLON_ID, data)
+        if(data[0].situation == PC.SIG.EndOfProgram): return data
+
+        # Se encontroou } então significa que não terá mais chamada de expr
+        if(data[0].token.idEqual(Ids.C_BRACKETS)): 
+            break
+
+    checkToken_N_reportSyntError(f"line {data[0].token.line}:"+ '}' + "expected to close multiple expression statement", Ids.C_BRACKETS, data)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+        
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+
+    return data
 
 def ID_func(data):
     """
