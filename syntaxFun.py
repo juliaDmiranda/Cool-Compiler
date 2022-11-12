@@ -588,6 +588,95 @@ def ID_func(data):
     # sozinho "ID" --> não faz nada
 
     return data
+def AT_func(data):
+    """
+    SOBRE
+    -------------
+    Função para tratar expressão @TYPE.ID
+    Trata-se de uma parte de uma expressão com recusão a esquerda
+    de chamada de método.
+
+    PARÂMETROS
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    Na estrutura da árvore semântica, .ID gera
+                    (AT)   1 raiz
+                      |
+                    TYPE*   1 ou mais filhos
+                      |
+                      ID*   1 ou mais filhos
+        * une em um nó só? Não, pois ID terá outros filhos
+    """
+    # cria raiz
+        
+    # Consumir token lido
+    data[0].nexToken(PC.SIG.TokenFound)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+
+    # cria filho 1
+
+    # verificar TYPE
+    checkToken_N_reportSyntError(f"line {data[0].token.line}: TYPE expected in expression expr[@TYPE]...",
+    Ids.TYPE_ID, data)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+    
+    # verificar .
+    checkToken_N_reportSyntError(f"line {data[0].token.line}: '.' expected in expression expr[@TYPE]...",
+    Ids.DOT_ID, data)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+
+    if(data[0].situation == PC.SIG.TokenFound):
+        # retornar ao anterior para poder dar next 
+        # na função ID_func(data) sem afetar o programa
+        data[0].undo()  
+        # retornar ao anterior para poder dar next 
+        # na função DOT_func(data) sem afetar o programa
+        
+    data = DOT_func(data) # passar o trabalho para outra função que irá fazer a mesma coisa
+    return data
+
+def OPs_func(data):
+    """
+    SOBRE
+    -------------
+    
+    Função para tratar expressão @TYPE.ID
+    Trata-se de uma parte de uma expressão com recusão a esquerda
+    de chamada de método.
+
+    
+    PARÂMETROS
+    -------------
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    Na estrutura da árvore semântica, operadores lógicos e aritiméticos geram
+                <exp>   (estrutura de recursão anterior)
+                     \\
+                     (OP)   1 raiz
+                      |
+                     expr   1 filho
+    """
+    # cria raiz
+    # Consumir token lido
+    data[0].nexToken(PC.SIG.TokenFound)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+    
+    # cria Nnésimo filho 
+    
+    data = expr(data) # chama expressão
+
+    data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+
+    return  data
 
 def checkToken_N_reportSyntError(errSTR, ID_comp, isFormal = False):
     '''
