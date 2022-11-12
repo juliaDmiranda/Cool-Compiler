@@ -348,6 +348,41 @@ def NEW_func(data):
 
     return data
 
+def ISVOID_func(data):
+    """
+    SOBRE
+    -------------
+    Função para tratar expressão ISVOID. Trata-se de uma expressão com recusão a direita.
+
+    ISVOID --> expr
+
+    PARÂMETROS
+    -------------
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    Na estrutura da árvore semântica, uma expressão ISVOID gera
+                  (ISVOID)   1 raiz
+                      |
+                     expr    1 filho
+    """
+    # cria raiz
+    data[0].nexToken(PC.SIG.TokenFound)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+        
+    # cria filho 1
+        
+    data = expr(data) # chama expressão
+
+    data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+
+    return data
+
 def ID_func(data):
     """
     SOBRE
@@ -451,6 +486,7 @@ def dotCheck():
     else:
         myProgram.undo()
         if(ID_EXPR_func(f"line {myProgram.token.line}: At last one expression expected in expression expr[@TYPE]...")) : return myProgram
+        
 def expr(data):
     '''
     SOBRE
