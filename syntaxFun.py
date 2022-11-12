@@ -219,8 +219,7 @@ def dotCheck():
     else:
         myProgram.undo()
         if(ID_EXPR_func(f"line {myProgram.token.line}: At last one expression expected in expression expr[@TYPE]...")) : return myProgram
-
-def expr():
+def expr(data):
     '''
     SOBRE
     -------------
@@ -230,135 +229,59 @@ def expr():
     - Expressões Atômicas: são simples, são símbolos terminais da gramática
 
     - Expressões Não Atômicas: são expressões que possuem símbolos não teminais(pensando na notação de gramática)
-        - Dentro de funções 
+        - Tratadas dentro de suas respectivas funções 
+        - Em cada uma, é possível que alguma expressão com recursão a esquerda seja chamada em algum 
+    momento (expr + expr, por exemplo) que será tratada pela função expr_line
+
+    PARÂMETROS
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
 
     RETORNO
     -------------
-    Até o momento retorna um objeto da classe Program_class.
-    Espera-se adaptar para retornar algo relacionado a árvore semântica.
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+   
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    A formação da árvore semântica é tratada separadamente para cada tipo de expressão identificada em Cool.
+    Isso quer dizer que, em cada função destinada a cada um dos grupos de expressões dispostos abaixo, com 
+    exceção de expressões atômicas as quais serão tratadas diretamente na chamada de expr(), haverá a adição
+    de nós segundo a regra sintática de cada expressão.
+
+    Pensar ainda em como vai ocorrer a ligação dos símbolos terminais
+        - depende do nó anterior de um outro contexto?
+        - em qual nó irei ligar?
     '''
-    if(myProgram.token.idEqual(Ids.SEMICOLON_ID)):
-        return myProgram
-    # procurar terminais
-    elif(myProgram.token.idEqual(Ids.INTEGER_ID) or myProgram.token.idEqual(Ids.STRING_ID)):
-        myProgram.nexToken(PC.SIG.TokenFound)
-        if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-        return True
-    elif(myProgram.token.idEqual(Ids.TRUE_ID) or myProgram.token.idEqual(Ids.FALSE_ID)):
-        myProgram.nexToken(PC.SIG.TokenFound)
-        if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-        return True
-    else: # não terminais
-        # Com recursão a direita
-        if(myProgram.token.idEqual(Ids.ID_ID)): # ID (terminal ou n'ao teminal)
-            myProgram.nexToken(PC.SIG.TokenFound)
-            if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-            
-            if(myProgram.token.idEqual(Ids.ATT_ID)): # Verifica Atribuição
-                myProgram.nexToken(PC.SIG.TokenFound)
-                if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-                return expr()
-            elif(myProgram.token.idEqual(Ids.O_PARENTHESIS)): # Verifica Chamada de função ID(expr, expr)
-                if(myProgram.afToken().idEqual(Ids.C_PARENTHESIS)):
-                    myProgram.nexToken(myProgram.situation)
+    # Terminais
+    if(data[0].token.idEqual(Ids.INTEGER_ID) or data[0].token.idEqual(Ids.STRING_ID) or data[0].token.idEqual(Ids.TRUE_ID) or data[0].token.idEqual(Ids.FALSE_ID)):
+        data[0].nexToken(PC.SIG.TokenFound)
+        if(data[0].situation == PC.SIG.EndOfProgram): return data
 
-                    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-                    myProgram.nexToken(myProgram.situation)
+    # Recursões a direita
+    
+    if(data[0].token.idEqual(Ids.ID_ID)):  data = ID_func(data) #ID
+    
+    if(data[0].token.idEqual(Ids.IF_ID)):  data = IF_func(data) #IF
+    
+    if(data[0].token.idEqual(Ids.WHILE_ID)): data = WHILE_func(data) #WHILE
+    
+    if(data[0].token.idEqual(Ids.LET_ID)): data = LET_func(data) #LET
+    
+    if(data[0].token.idEqual(Ids.CASE_ID)): data = CASE_func(data) #CASE
+    
+    if(data[0].token.idEqual(Ids.NEW_ID)): data = NEW_func(data) #NEW
+    
+    if(data[0].token.idEqual(Ids.ISVOID_ID)): data = ISVOID_func(data) #ISVOID
+    
+    if(data[0].token.idEqual(Ids.NOT_ID)): data = NOT_func(data) #NOT
+        
+    if(data[0].token.idEqual(Ids.TIDE_ID)): data = TIDE_func(data) #NOT
+    
+    if(data[0].token.idEqual(Ids.O_PARENTHESIS)): data = O_PARENTHESIS_func(data) #(
+    
+    if(data[0].token.idEqual(Ids.O_BRACKETS)): data = O_BRACKETS_func(data)  #{
 
-                    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-                
-                    return myProgram
-                if(ID_EXPR_func(f"line {myProgram.token.line}: ')' was expected to close 'ID(expr, expr)' structure")): return myProgram
-                return True
-            elif(myProgram.token.idEqual(Ids.AT_ID)):
-                myProgram.nexToken(PC.SIG.TokenFound)
-                if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-                
-                # verificar TYPE
-                checkToken_N_reportSyntError(f"line {myProgram.token.line}: TYPE expected in expression expr[@TYPE]...",
-                Ids.TYPE_ID)
-                if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-                
-                # verificar .
-                checkToken_N_reportSyntError(f"line {myProgram.token.line}: '.' expected in expression expr[@TYPE]...",
-                Ids.DOT_ID)
-                if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-                
-                if(not dotCheck()): return myProgram
-                return myProgram
-            elif(myProgram.token.idEqual(Ids.DOT_ID)):
-                myProgram.nexToken(PC.SIG.TokenFound)
-                if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-                if(not dotCheck()): return myProgram
-                return myProgram
-            else:
-                expr_line() # adicionar ao fim de todas as outras expressões
-                return myProgram
-        elif(myProgram.token.idEqual(Ids.NEW_ID)): # new
-            myProgram.nexToken(PC.SIG.TokenFound)
-            if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-            # checar TYPE
-            checkToken_N_reportSyntError(f"line {myProgram.token.line}: TYPE was expected after new",
-            Ids.TYPE_ID)
-            if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-            return myProgram
-        elif(myProgram.token.idEqual(Ids.O_PARENTHESIS)): # Verificação de (expr)
-            myProgram.nexToken(PC.SIG.TokenFound)
-            if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-            expr()
-            # bug2()
-            checkToken_N_reportSyntError(f"line {myProgram.token.line}: ')' was expected to close '(expr)' structure",
-            Ids.C_PARENTHESIS)# Verifica )
-            if(myProgram.situation == PC.SIG.EndOfProgram): return True
-        # TIDE e ISVOID e NOT
-        elif(myProgram.token.idEqual(Ids.ISVOID_ID) or myProgram.token.idEqual(Ids.NOT_ID) or myProgram.token.idEqual(Ids.TIDE_ID)):
-            myProgram.nexToken(PC.SIG.TokenFound)
-            if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-            return expr()
-        elif(myProgram.token.idEqual(Ids.IF_ID)):     # IF
-            return IF_func()
-        elif(myProgram.token.idEqual(Ids.WHILE_ID)):# WHILE
-            return WHILE_func()
-        elif(myProgram.token.idEqual(Ids.LET_ID)): # LET
-            LET_func()
-        # CASE
-        elif(myProgram.token.idEqual(Ids.CASE_ID)):
-            return CASE_func()
-        elif(myProgram.token.idEqual(Ids.O_BRACKETS)):
-            myProgram.nexToken(PC.SIG.TokenFound)
-            if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-            # mais de uma expressão
-            while True:
-                if(myProgram.token.idEqual(Ids.C_BRACKETS)):
-                    myProgram.nexToken(PC.SIG.TokenFound)
-                    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-                    return True
-
-                ret = expr()
-
-                if(not ret):
-                    checkToken_N_reportSyntError(f"line {myProgram.token.line}:"+ '}' + "expected to close multiple expression statement", Ids.C_BRACKETS)
-                    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-                    return
-                checkToken_N_reportSyntError(f"line {myProgram.token.line}: ';' expected in multiple expression statement", Ids.SEMICOLON_ID)
-                if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-       # modificados para remover recursão a esquerda # +, -, *, /, <, <=, =
-        elif(myProgram.token.idEqual(Ids.PLUS_ID) or myProgram.token.idEqual(Ids.MINUS_ID) or myProgram.token.idEqual(Ids.ASTERISK_ID) or myProgram.token.idEqual(Ids.F_SLASH_ID) or myProgram.token.idEqual(Ids.LESS_THAN_ID) or myProgram.token.idEqual(Ids.LESS_THAN_EQUAL_TO_ID) or myProgram.token.idEqual(Ids.EQUAL_TO_ID)):
-            myProgram.nexToken(PC.SIG.TokenFound)
-            if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-            return expr()
-        elif(myProgram.token.idEqual(Ids.SEMICOLON_ID)):
-            return myProgram
-        else: # se não for nenhuma das opções erro
-            myProgram.setPs_err(f"line {myProgram.token.line}: Expression expected")
-            myProgram.addError()  
-            return False  
-        # por while para ficar conferindo até dar não "."
-        while (myProgram.token.idEqual(Ids.DOT_ID)):
-            myProgram.nexToken(PC.SIG.TokenFound)
-            if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-            expr()
-        return True
+    return data
 
 def TYPE_ATT_EXPR_verif(err1, err2=[]):
     '''
