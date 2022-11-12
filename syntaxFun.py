@@ -230,24 +230,47 @@ def CASE_func():
     Ids.ESAC_ID) 
     if(myProgram.situation == PC.SIG.EndOfProgram): return True
 
-def ID_EXPR_func(err=[]):
-    '''
-    SOBRE
-    -----------
-    Função auxiliar de expr() para expressão (exp, exp...)
-    '''
-    while True:
-        myProgram.nexToken(PC.SIG.TokenFound)
-        if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
 
-        expr()
-        
-        if(not myProgram.token.idEqual(Ids.COMMA_ID)): # verificar se tem mais parâmetros
-            break
-    checkToken_N_reportSyntError(err,
-    Ids.C_PARENTHESIS) # Verifiicar )
-    if(myProgram.situation == PC.SIG.EndOfProgram): return True
-    return False
+def ID_func(data):
+    """
+    SOBRE
+    -------------
+    Função para tratar expressões que começam com ID. Trata-se de uma expressão com recusão a direita.
+    ID --> expr 
+    ID --> epslon, isto é, somente o ID
+
+    PARÂMETROS
+    -------------
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    Na estrutura da árvore semântica, uma expressão inicializada com ID gerará 
+    um nó somente na outra função na qual foi chamada. Caso contrário geraria 
+    redundância de nó
+                    (IF)           1 raiz
+                /    |     \\
+            expr1  expr2  expr3    3 filhos
+    
+    """
+    # adicionar raiz
+    data[0].nexToken(PC.SIG.TokenFound)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data # return data
+    
+    # <-
+    if(data[0].token.idEqual(Ids.ATT_ID)): # Verifica Atribuição
+        data = ATT_func(data)
+    # ()
+    elif(data[0].token.idEqual(Ids.O_PARENTHESIS)):
+        data = O_PARENTHESIS_func(data)
+    
+    # sozinho "ID" --> não faz nada
+
+    return data
 
 def checkToken_N_reportSyntError(errSTR, ID_comp, isFormal = False):
     '''
