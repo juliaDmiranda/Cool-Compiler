@@ -1,47 +1,132 @@
 from Id import Ids
 import Program_class as PC
 
-def IF_func ():
-    myProgram.nexToken(myProgram.situation)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-    expr()
-    # Verifica Then
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}: 'then' was expected after the 1° 'if' condition",
-    Ids.THEN_ID)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-    expr()
-    # Verifica ELSE
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}: 'else' was expected in 'if' structure",
-    Ids.THEN_ID)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-    expr()
-    # Verifica Fi
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}: 'fi' was expected to close 'if' structure",
-    Ids.FI_ID)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-
-    return myProgram
-
-def WHILE_func():
-    '''
+def IF_func(data):
+    """
     SOBRE
-    -----------
-    Função auxiliar de expr() para expressão WHILE
-    '''
-    myProgram.nexToken(myProgram.situation)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+    -------------
+    Função para tratar expressão IF. Ao longo da estrutura IF há expressões.
+
+    IF expr THEN expr ELSE expr FI
+
+    PARÂMETROS
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
     
-    expr()
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    Lembrando que é possível que alguma expressão
+    com recursão a esquerda seja chamada em algum 
+    momento (expr + expr, por exemplo) que será tratada
+    pela função expr_line
+    Na estrutura da árvore semântica, uma expressão IF gera
+                        (IF)           1 raiz
+                    /    |     \\\\
+                expr1  expr2  expr3    3 filhos
+    """
+    # consome token lido
+    data[0].nexToken(data[0].situation)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+
+    # cria raiz do tipo IF
+
+    # cria filho 1
+        
+    data = expr(data) # chama expressão
+
+    data = expr_line(data) # recursão à esquerda
+
+    # Verifica Then
+    checkToken_N_reportSyntError(f"line {data[0].token.line}: 'then' was expected after the 1° 'if' condition",
+    Ids.THEN_ID, data)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+
+    # cria filho 2
+    data = expr(data) # chama expressão
+
+    data = expr_line(data) # recursão à esquerda
+
+    # Verifica ELSE
+    checkToken_N_reportSyntError(f"line {data[0].token.line}: 'else' was expected in 'if' structure",
+    Ids.ELSE_ID, data)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+
+    # cria filho 3
+    data = expr(data) # chama expressão
+
+    data = expr_line(data) # recursão à esquerda
+
+    # Verifica Fi
+    checkToken_N_reportSyntError(f"line {data[0].token.line}: 'fi' was expected to close 'if' structure",
+    Ids.FI_ID, data)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+
+    return data
+
+def WHILE_func(data):
+    """
+    SOBRE
+    -------------
+    Função para tratar expressão WHILE
+    Ao longo da estrutura WHILE há expressões
+
+    WHILE expr LOOP expr POOL
+
+    
+    PARÂMETROS
+    -------------
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    Lembrando que é possível que alguma expressão
+        com recursão a esquerda seja chamada em algum 
+        momento (expr + expr, por exemplo) que será tratada
+        pela função expr_line
+        
+        - Na estrutura da árvore semântica, uma expressão IF gera
+                    (WHILE)     1 raiz
+                    /    \\
+                expr1  expr2    2 filhos
+    
+    """
+    # consome token lido
+    data[0].nexToken(data[0].situation)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+    
+    # cria raiz do tipo WHILE
+
+    # cria filho 1
+        
+    data = expr(data) # chama expressão
+
+    data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+
     # Verificar Loop
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}: 'loop' expected after 'while' structure condition",
-    Ids.LOOP_ID)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-    expr()
+    checkToken_N_reportSyntError(f"line {data[0].token.line}: 'loop' expected after 'while' structure condition",
+    Ids.LOOP_ID, data)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+
+    # cria filho 2
+        
+    data = expr(data) # chama expressão
+
+    data = expr_line(data) # recursão à esquerda
+
     # Verificar Pool
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}: 'pool' was expected to close 'while' structure",
-    Ids.POOL_ID)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-    return myProgram
+    checkToken_N_reportSyntError(f"line {data[0].token.line}: 'pool' was expected to close 'while' structure",
+    Ids.POOL_ID, data)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+
+    return data
 
 def LET_func():
     '''
