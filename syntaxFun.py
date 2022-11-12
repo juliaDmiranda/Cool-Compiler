@@ -233,33 +233,82 @@ def LET_func(data):
 
     return data
         
-def CASE_func():
-    '''
+def CASE_func(data):
+    """
     SOBRE
-    -----------
-    Função auxiliar de expr() para expressão CASE
-    '''
-    myProgram.nexToken(myProgram.situation)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-    expr()
-    # Verifica Of
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}: 'of' expected on case statement",
-    Ids.OF_ID) 
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-
-    myProgram.setPs_err(f"line {myProgram.token.line}:" + "'ID' missing in 'case' structure") # guarda erro para se ocorrer exceção vai ser esse erro
-    if(not myProgram.token.idEqual(Ids.ID_ID)): 
-        myProgram.addError()
-
-    while(myProgram.token.idEqual(Ids.ID_ID)):
-        caseOPT() # verifica :TYPE => expr; obrigatório
-        if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+    -------------
+    Função para tratar expressão CASE
     
-    # Verifica esac
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}:  'esac' was expected to close CASE structure",
-    Ids.ESAC_ID) 
-    if(myProgram.situation == PC.SIG.EndOfProgram): return True
+    PARÂMETROS
+    -------------
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    Na estrutura da árvore semântica, uma expressão CASE gera
+                (CASE)        1 raiz
+                /    \\
+            expr1  ID&TYPE    2 filhos
+                        |       1 filho
+                        expr
+    Observe que as informações de ID, TYPE devem ser guardados porque serão úteis na análise semântica
+    """
 
+    # Consome token lido
+    data[0].nexToken(data[0].situation)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+    
+    # cria filho 1
+        
+    data = expr(data) # chama expressão
+
+    data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+
+    # Verifica Of
+    checkToken_N_reportSyntError(f"line {data[0].token.line}: 'of' expected on case statement",
+    Ids.OF_ID, data) 
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+
+    data[0].setPs_err(f"line {data[0].token.line}:" + "'ID' missing in 'case' structure") # guarda erro para se ocorrer exceção vai ser esse erro
+    if(not data[0].token.idEqual(Ids.ID_ID)): 
+        data[0].addError()
+
+    # Considerando que o filho 1 já exista
+    while(data[0].token.idEqual(Ids.ID_ID)):
+        # cria filho n + 1
+
+        data[0].nexToken(data[0].situation) # consome ID (filho)
+
+        if(data[0].situation == PC.SIG.EndOfProgram): return data
+        
+        # verifica o :
+        checkToken_N_reportSyntError(f"line {data[0].token.line}:" + "':' missing in  'case' structure", Ids.COLON_ID, data)
+        if(data[0].situation == PC.SIG.EndOfProgram): return data
+        
+        # verifica TYPE (filho)
+        checkToken_N_reportSyntError(f"line {data[0].token.line}:" + "TYPE missing in  'case' structure", Ids.TYPE_ID, data)
+        if(data[0].situation == PC.SIG.EndOfProgram): return data
+        
+        # verifica =>
+        checkToken_N_reportSyntError(f"line {data[0].token.line}:" + "'=>' missing in  'case' structure", Ids.F_ATT_ID, data)
+        if(data[0].situation == PC.SIG.EndOfProgram): return data
+        
+        # cria filho n+2
+        
+        data = expr(data) # chama expressão
+
+        data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+
+        # ;
+        checkToken_N_reportSyntError(f"line {data[0].token.line}:" + "';' missing in  'case' structure", Ids.SEMICOLON_ID, data)
+        if(data[0].situation == PC.SIG.EndOfProgram): return data
+        
+    # Verifica esac
+    checkToken_N_reportSyntError(f"line {data[0].token.line}:  'esac' was expected to close CASE structure",
+    Ids.ESAC_ID, data) 
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+    
+    return data
 
 def ID_func(data):
     """
@@ -334,34 +383,6 @@ def checkToken_N_reportSyntError(errSTR, ID_comp, isFormal = False):
                 myProgram.situation = PC.SIG.TokenNotFound
     else:
         myProgram.nexToken(PC.SIG.TokenFound) # ir para o próximo token já que o atual foi analisado
-
-def caseOPT(err=0): # verifica :TYPE => expr; obrigatório
-    '''
-    SOBRE
-    ----------------
-    Função para checar a estrutura sintática das opções da expressão CASE
-    Obs: o token '.' já foi analizado, portanto, o token 
-    atual deve ser um ID para atender a regra sintática
-    
-    RETORNO
-    ----------------
-    '''
-    myProgram.nexToken(myProgram.situation) # consome ID
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-    # verifica o :
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}:" + "':' missing in  'case' structure", Ids.COLON_ID)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-    # verifica TYPE
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}:" + "TYPE missing in  'case' structure", Ids.TYPE_ID)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-    # verifica =>
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}:" + "'=>' missing in  'case' structure", Ids.F_ATT_ID)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-    # expr
-    expr()
-    # ;
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}:" + "';' missing in  'case' structure", Ids.SEMICOLON_ID)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
 
 def dotCheck():
     '''
