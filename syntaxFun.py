@@ -60,7 +60,7 @@ def IF_func(data):
     pela função expr_line
     Na estrutura da árvore semântica, uma expressão IF gera
                         (IF)           1 raiz
-                    /    |     \\\\
+                    /    |     \\
                 expr1  expr2  expr3    3 filhos
     """
     # consome token lido
@@ -163,45 +163,75 @@ def WHILE_func(data):
 
     return data
 
-def LET_func():
-    '''
+
+def LET_func(data):
+    """
     SOBRE
-    -----------
-    Função auxiliar de expr() para expressão LET
-    '''
-    myProgram.nexToken(myProgram.situation)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+    -------------
+    Função para tratar expressão LET
+
+    PARÂMETROS
+    -------------
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    Na estrutura da árvore semântica, uma expressão LET gera
+                    (LET)     1 raiz
+                      |
+                  ID&TYPE1*   1 ou mais filhos
+                      |
+                     expr     1 filho
+    Observe que as informações de ID, TYPE devem ser guardados porque serão úteis na análise semântica
+    """
+    
+    data[0].nexToken(data[0].situation)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+    
     while True:
-        # Verifica ID
-        checkToken_N_reportSyntError(f"line {myProgram.token.line}: ID expected on 'let' structure",
-        Ids.ID_ID)
-        if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+        # criar filho n
+
+        # Verifica ID (info do nó)
+        checkToken_N_reportSyntError(f"line {data[0].token.line}: ID expected on 'let' structure",
+        Ids.ID_ID, data)
+        if(data[0].situation == PC.SIG.EndOfProgram): return data
         
         # verifica  :
-        checkToken_N_reportSyntError(f"line {myProgram.token.line}: ':' expected on 'let' structure",
-        Ids.COLON_ID)
-        if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+        checkToken_N_reportSyntError(f"line {data[0].token.line}: ':' expected on 'let' structure",
+        Ids.COLON_ID, data)
+        if(data[0].situation == PC.SIG.EndOfProgram): return data
 
-        # verifica TYPE e resto
-        err1 = "line {myProgram.token.line}: TYPE expected on 'let' structure"
-        TYPE_ATT_EXPR_verif(err1)
+        # verificar TYPE (info do nó)
+        checkToken_N_reportSyntError(f"line {data[0].token.line}: TYPE expected on 'let' structure",
+        Ids.TYPE_ID, data)
 
-        if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+        if(data[0].token.idEqual(Ids.ATT_ID)):
+            data[0].nexToken(data[0].situation)
+            if(data[0].situation == PC.SIG.EndOfProgram): return
+        
+            data = expr(data) # chama expressão
 
-        if(not myProgram.token.idEqual(Ids.COMMA_ID)):
+            data = expr_line(data) # recursão à esquerda
+
+        if(not data[0].token.idEqual(Ids.COMMA_ID)): # verificar se terá outro ID:TYPE
             break
-    # Verifica in
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}: 'in' was expected to close 'let' structure",
-    Ids.IN_ID)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-    return expr()
+        
+        data[0].nexToken(data[0].situation)
+        if(data[0].situation == PC.SIG.EndOfProgram): return
 
-def expr_line():
-    # modificados para remover recursão a esquerda # +, -, *, /, <, <=, =
-    while(myProgram.token.idEqual(Ids.PLUS_ID) or myProgram.token.idEqual(Ids.MINUS_ID) or myProgram.token.idEqual(Ids.ASTERISK_ID) or myProgram.token.idEqual(Ids.F_SLASH_ID) or myProgram.token.idEqual(Ids.LESS_THAN_ID) or myProgram.token.idEqual(Ids.LESS_THAN_EQUAL_TO_ID) or myProgram.token.idEqual(Ids.EQUAL_TO_ID)):
-        myProgram.nexToken(PC.SIG.TokenFound)
-        if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-        expr()
+    # ao sair do loop, a raís terá um total de k-1 filhos
+    # cria kanézimo filho (IN)
+
+    # Verifica in
+    checkToken_N_reportSyntError(f"line {data[0].token.line}: 'in' was expected to close 'let' structure",
+    Ids.IN_ID, data)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+    
+    data = expr(data) # chama expressão
+
+    data = expr_line(data) # recursão à esquerda
+
+    return data
         
 def CASE_func():
     '''
