@@ -310,6 +310,44 @@ def CASE_func(data):
     
     return data
 
+def NEW_func(data):
+    """
+    SOBRE
+    -------------
+    Função para tratar expressão NEW.
+
+    NEW type
+
+    PARÂMETROS
+    -------------
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    Na estrutura da árvore semântica, uma expressão CASE gera
+                    (NEW)   1 raiz
+                      |
+                    TYPE    1 filho
+    """
+    # cria raiz
+        
+    # Consumir token lido
+    data[0].nexToken(PC.SIG.TokenFound)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+    
+    # cria filho
+        
+    # checar TYPE (filho)
+    checkToken_N_reportSyntError(f"line {data[0].token.line}: TYPE was expected after new",
+    Ids.TYPE_ID, data)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+
+    return data
+
 def ID_func(data):
     """
     SOBRE
