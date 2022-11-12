@@ -621,36 +621,43 @@ def checkToken_N_reportSyntError(errSTR, ID_comp, isFormal = False):
                 myProgram.situation = PC.SIG.TokenNotFound
     else:
         myProgram.nexToken(PC.SIG.TokenFound) # ir para o próximo token já que o atual foi analisado
-
-def dotCheck():
-    '''
+def DOT_func(data):
+    """
     SOBRE
-    ----------------
-    Função para checar a estrutura do tipo .ID([expr,...])
-    Obs: o token '.' já foi analizado, portanto, o token 
-    atual deve ser um ID para atender a regra sintática
+    -------------
+    Função para tratar expressão .ID
+    Trata-se de uma parte de uma expressão com recusão a esquerda
+    de chamada de método.
     
+    PARÂMETROS
+    -------------
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+
     RETORNO
-    ----------------
-    '''
-    # verificar ID
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}: ID expected in expression expr[@TYPE]... after '.'",
-    Ids.ID_ID)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    Na estrutura da árvore semântica, .ID gera
+                    (DOT)   1 raiz
+                      |
+                      ID   1 ou mais filhos
+    """
 
-    # verificar parênteses
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}: '(' expected in expression expr[@TYPE]...",
-    Ids.O_PARENTHESIS)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+    # cria raiz
+        
+    # Consumir token lido
+    data[0].nexToken(PC.SIG.TokenFound)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
 
-    # )
-    if(myProgram.token.idEqual(Ids.C_PARENTHESIS)):
-        myProgram.nexToken(PC.SIG.TokenFound)
-        if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-        return
-    else:
-        myProgram.undo()
-        if(ID_EXPR_func(f"line {myProgram.token.line}: At last one expression expected in expression expr[@TYPE]...")) : return myProgram
+    # cria filho (ID)
+        
+    data = expr(data) # chama expressão
+
+    data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+
+    return data
         
 def expr(data):
     '''
