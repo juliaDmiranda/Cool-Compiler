@@ -342,7 +342,7 @@ def NEW_func(data):
     # cria filho
         
     # checar TYPE (filho)
-    checkToken_N_reportSyntError(f"line {data[0].token.line}: TYPE was expected after new",
+    data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: TYPE was expected after new",
     Ids.TYPE_ID, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
