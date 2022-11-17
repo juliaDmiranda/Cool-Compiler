@@ -7,7 +7,7 @@ def printDiferente(aux):
 try:
     fileName    =  sys.argv[1]
 except:
-    fileName      =  "primesHard.cl"
+    fileName      =  "cool_programs/primes.cl"
 tokens = LA.readNtokenize(fileName)
 LA.printTokens(tokens)
 try:
