@@ -846,27 +846,6 @@ def expr(data):
 
     return data
 
-def TYPE_ATT_EXPR_verif(err1, err2=[]):
-    '''
-    SOBRE
-    --------
-    Função para verificar estrutura TYPE <- expr
-    '''
-    # verificar TYPE
-    checkToken_N_reportSyntError(err1,
-    Ids.TYPE_ID)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-
-    # verificar <-
-    myProgram.setPs_err(err2) # guarda erro para se ocorrer exceção vai ser esse erro
-
-    if(myProgram.token.idEqual(Ids.ATT_ID)):
-        myProgram.nexToken(myProgram.situation)
-        if(myProgram.situation == PC.SIG.EndOfProgram): return
-        expr()
-    else:
-        return myProgram
-
 def ATTRIBUTE_func(data):
     """
     SOBRE
