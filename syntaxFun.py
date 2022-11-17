@@ -1007,56 +1007,64 @@ def FEATURE_func():
                 myProgram.addError()
                 return myProgram
 
-def CLASS_func ():    
+def CLASS_func (data): 
+    _className, _typeInherits = "" ,""
     # Verifica class
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}:" + "Must be a class declaration",
-    Ids.CLASS_ID)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+    data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:" + "Must be a class declaration",
+    Ids.CLASS_ID, data)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
     
     # Verifica TYPE
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}: 'class' must be followed by a TYPE",
-    Ids.TYPE_ID)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+    data, _className = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'class' must be followed by a TYPE",
+    Ids.TYPE_ID, data)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
 
     # Verifica inherits (OPCIONAL) só uma chance aos opcionais
-    if(myProgram.token.idEqual(Ids.INHERITS_ID)):  
-        myProgram.nexToken(myProgram.situation)
-        if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+    if(data[0].token.idEqual(Ids.INHERITS_ID)):  
+        data[0].nexToken(data[0].situation)
+        if(data[0].situation == PC.SIG.EndOfProgram): return data
         # Verifica TYPE
-        checkToken_N_reportSyntError(f"line {myProgram.token.line}: 'inharits' must be followed by a TYPE",
-        Ids.TYPE_ID)
-        if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+        data, _typeInherits = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'inharits' must be followed by a TYPE",
+        Ids.TYPE_ID, data)
+        if(data[0].situation == PC.SIG.EndOfProgram): return data
     
+    data[1].newType(_className, _typeInherits)
+
     # Verifica {
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}:" + " '{'" + f" expected after class declaration",
-    Ids.O_BRACKETS)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+    data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:" + " '{'" + f" expected after class declaration",
+    Ids.O_BRACKETS, data)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
     # CLASSE VAZIA
     # verifica }
-    if(not myProgram.token.idEqual(Ids.C_BRACKETS)):
+    if(not data[0].token.idEqual(Ids.C_BRACKETS)):
         while True:
-            FEATURE_func()
+            data = FEATURE_func(data)
             # verifica ;
-            checkToken_N_reportSyntError(f"line {myProgram.token.line}:" + " ';'" + f" expected in the end of a feature on {myProgram.token.token}",
-            Ids.SEMICOLON_ID)
-            if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+            data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:" + " ';'" + f" expected in the end of a feature on {data[0].token.token}",
+            Ids.SEMICOLON_ID, data)
+            if(data[0].situation == PC.SIG.EndOfProgram): return data
             
-            if(not myProgram.token.idEqual(Ids.ID_ID)):
+            if(not data[0].token.idEqual(Ids.ID_ID)):
                 break
-    endClassError = f"line {myProgram.token.line}:" + " ';'" + f" expected to close class"
+    endClassError = f"line {data[0].token.line}:" + " ';'" + f" expected to close class"
     # verifica }
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}:" + " '}'" + f" expected o close class statement",
-    Ids.C_BRACKETS)
-    if(myProgram.situation == PC.SIG.EndOfProgram): 
-        myProgram.setPs_err(endClassError)
-        myProgram.addError()
-        return myProgram
-    # verifica ;
-    checkToken_N_reportSyntError(endClassError,
-    Ids.SEMICOLON_ID)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+    data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:" + " '}'" + f" expected o close class statement",
+    Ids.C_BRACKETS, data)
+    if(data[0].situation == PC.SIG.EndOfProgram): 
+        data[0].setPs_err(endClassError)
+        data[0].addError()
+        return data
+
+    data[1].addType()
     
-    return CLASS_func()
+    # verifica ;
+    data, _ = checkToken_N_reportSyntError(endClassError,
+    Ids.SEMICOLON_ID, data)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+
+    data = CLASS_func(data)
+
+    return data
 
 def program(line):
     myProgram = PC.Program(line)
