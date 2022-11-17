@@ -491,7 +491,7 @@ def O_PARENTHESIS_func(data):
                 
         data[0].nexToken(PC.SIG.TokenFound)
         if(data[0].situation == PC.SIG.EndOfProgram): return data
-    checkToken_N_reportSyntError(f"line {data[0].token.line}: ')' was expected to close '(expr)' structure",
+    data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: ')' was expected to close '(expr)' structure",
     Ids.C_PARENTHESIS, data)# Verifica )
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
