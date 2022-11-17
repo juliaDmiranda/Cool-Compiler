@@ -867,14 +867,36 @@ def TYPE_ATT_EXPR_verif(err1, err2=[]):
     else:
         return myProgram
 
-def ATTRIBUTE_func():
-    '''
+def ATTRIBUTE_func(data):
+    """
     SOBRE
     ----------
-    Função que trata da estrutura de um atributo 
-    '''
-    err1 = f"line {myProgram.token.line}: " + "No atribute Type declared"
-    TYPE_ATT_EXPR_verif(err1)
+    Função que trata da estrutura de um atributo .
+    Verificar estrutura TYPE <- expr.
+    
+    PARÂMETROS
+    -------------
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    """
+    # verificar TYPE
+    data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: " + "No atribute Type declared",
+    Ids.TYPE_ID, data)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+
+    # verificar se há atribuição de valor junto da declaração de um atributo
+    if(data[0].token.idEqual(Ids.ATT_ID)):
+        data[0].nexToken(data[0].situation)
+        if(data[0].situation == PC.SIG.EndOfProgram): return
+        data = expr(data)
+
+    return data
 
 def formal(data):
     """
