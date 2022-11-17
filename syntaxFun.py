@@ -678,75 +678,7 @@ def OPs_func(data):
 
     return  data
 
-def checkToken_N_reportSyntError(errSTR, ID_comp, isFormal = False):
-    '''
-    SOBRE
-    ----------------
-    Função criada para comparar um dado token T com um elemento 
-    E esperado para seguir a ordem sintática da gramática.
-    Nessa verificação, mesmo que T não seja E, verifica-se se
-    o próximo token após T é E. Se for, será considerado consumido
-    como se o erro sintático não ocorreu. Porém a mensagem de erro
-    ainda aparecerá ao usuário após a análise.
 
-    PARÂMETROS
-    ----------------
-    errSTR : mensagem de erro referente a regra que a falta do E inflingiu
-    ID_comp: Identificador do E esperado naquele momento
-
-    RETORNO
-    ----------------
-    Não retorna valores
-    '''
-    if (not myProgram.token.idEqual(ID_comp)): # se o token procurado não for o atual
-        myProgram.setPs_err(errSTR)
-        myProgram.addError()
-        if(myProgram.afToken().idEqual(ID_comp)): # se o token procurado for o próximo
-            myProgram.nexToken(PC.SIG.TokenFound)                  # "fingir" que acertou de primeira
-        else:
-            if(isFormal):
-                myProgram.nexToken(PC.SIG.TokenNotFound) # ir para o próximo token já que o atual foi analisado
-            else:
-                myProgram.situation = PC.SIG.TokenNotFound
-    else:
-        myProgram.nexToken(PC.SIG.TokenFound) # ir para o próximo token já que o atual foi analisado
-def DOT_func(data):
-    """
-    SOBRE
-    -------------
-    Função para tratar expressão .ID
-    Trata-se de uma parte de uma expressão com recusão a esquerda
-    de chamada de método.
-    
-    PARÂMETROS
-    -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
-
-    RETORNO
-    -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
-    
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
-    ----------------------------
-    Na estrutura da árvore semântica, .ID gera
-                    (DOT)   1 raiz
-                      |
-                      ID   1 ou mais filhos
-    """
-
-    # cria raiz
-        
-    # Consumir token lido
-    data[0].nexToken(PC.SIG.TokenFound)
-    if(data[0].situation == PC.SIG.EndOfProgram): return data
-
-    # cria filho (ID)
-        
-    data = expr(data) # chama expressão
-
-    data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
-
-    return data
 
 def expr_line(data):
     """
@@ -846,6 +778,47 @@ def expr(data):
 
     return data
 
+def checkToken_N_reportSyntError(errSTR, ID_comp, data, isFormal = False):
+    """
+    SOBRE
+    ----------------
+    Função criada para comparar um dado token T com um elemento 
+    E esperado para seguir a ordem sintática da gramática.
+    Nessa verificação, mesmo que T não seja E, verifica-se se
+    o próximo token após T é E. Se for, será considerado consumido
+    como se o erro sintático não ocorreu. Porém a mensagem de erro
+    ainda aparecerá ao usuário após a análise.
+
+    PARÂMETROS
+    ----------------
+    errSTR : mensagem de erro referente a regra que a falta do E inflingiu
+    ID_comp: Identificador do E esperado naquele momento
+    
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    """
+    typeOrName = ""
+    if (not data[0].token.idEqual(ID_comp)): # se o token procurado não for o atual
+        data[0].setPs_err(errSTR)
+        data[0].addError()
+        if(data[0].afToken().idEqual(ID_comp)): # se o token procurado for o próximo
+            data[0].nexToken(PC.SIG.TokenFound)                  # "fingir" que acertou de primeira
+            typeOrName =data[0].token.token
+
+        else:
+            if(isFormal):
+                data[0].nexToken(PC.SIG.TokenNotFound) # ir para o próximo token já que o atual foi analisado
+            else:
+                data[0].situation = PC.SIG.TokenNotFound
+    else:
+        typeOrName =data[0].token.token
+        data[0].nexToken(PC.SIG.TokenFound) # ir para o próximo token já que o atual foi analisado
+        
+    return data, typeOrName
 def ATTRIBUTE_func(data):
     """
     SOBRE
