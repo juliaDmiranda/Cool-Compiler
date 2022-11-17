@@ -534,19 +534,20 @@ def O_BRACKETS_func(data):
 
         data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
 
-        checkToken_N_reportSyntError(f"line {data[0].token.line}: ';' expected in multiple expression statement", Ids.SEMICOLON_ID, data)
+        data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: ';' expected in multiple expression statement", Ids.SEMICOLON_ID, data)
         if(data[0].situation == PC.SIG.EndOfProgram): return data
 
         # Se encontroou } então significa que não terá mais chamada de expr
         if(data[0].token.idEqual(Ids.C_BRACKETS)): 
             break
 
-    checkToken_N_reportSyntError(f"line {data[0].token.line}:"+ '}' + "expected to close multiple expression statement", Ids.C_BRACKETS, data)
+    data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:"+ '}' + "expected to close multiple expression statement", Ids.C_BRACKETS, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
         
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
     return data
+
 
 def ID_func(data):
     """
