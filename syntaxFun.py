@@ -974,39 +974,42 @@ def METHOD_func():
 
     return myProgram
 
-def FEATURE_func():
+def FEATURE_func(data):
+    _name =  ""
     # Verifica ID
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}: ID was expected to initialize a feature",
-    Ids.ID_ID)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+    data, _name = checkToken_N_reportSyntError(f"line {data[0].token.line}: ID was expected to initialize a feature",
+    Ids.ID_ID, data)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
 
-    if(myProgram.token.idEqual(Ids.O_PARENTHESIS)):
-        myProgram.nexToken(myProgram.situation)
-        if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-        return METHOD_func()
+    if(data[0].token.idEqual(Ids.O_PARENTHESIS)):
+        data[0].nexToken(data[0].situation)
+        if(data[0].situation == PC.SIG.EndOfProgram): return data
+        data =  METHOD_func(data,_name)
+        return data
     else:
         # segunda chance só se o token analisado não for :
-        if(not myProgram.token.idEqual(Ids.COLON_ID) and myProgram.afToken().idEqual(Ids.O_PARENTHESIS)):
-            myProgram.nexToken(PC.SIG.TokenFound)
-            if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-            return METHOD_func()
+        if(not data[0].token.idEqual(Ids.COLON_ID) and data[0].afToken().idEqual(Ids.O_PARENTHESIS)):
+            data[0].nexToken(PC.SIG.TokenFound)
+            if(data[0].situation == PC.SIG.EndOfProgram): return data
+            data = METHOD_func(data)
         else:
-            if(myProgram.token.idEqual(Ids.COLON_ID)): # verifica :
-                myProgram.nexToken(PC.SIG.TokenFound)
-                if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-                return ATTRIBUTE_func()
-            elif(myProgram.afToken().idEqual(Ids.COLON_ID)): # se o próximo for :
-                myProgram.nexToken(PC.SIG.TokenFound)
-                if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-                return ATTRIBUTE_func()
+            if(data[0].token.idEqual(Ids.COLON_ID)): # verifica :
+                data[0].nexToken(PC.SIG.TokenFound)
+                if(data[0].situation == PC.SIG.EndOfProgram): return data
+                data = ATTRIBUTE_func(data)
+            elif(data[0].afToken().idEqual(Ids.COLON_ID)): # se o próximo for :
+                data[0].nexToken(PC.SIG.TokenFound)
+                if(data[0].situation == PC.SIG.EndOfProgram): return data
+                data = ATTRIBUTE_func(data)
             else:
-                myProgram.nexToken(PC.SIG.TokenFound)
-                if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+                data[0].nexToken(PC.SIG.TokenFound)
+                if(data[0].situation == PC.SIG.EndOfProgram): return data
 
-                myProgram.setPs_err(f"line {myProgram.token.line}: '('(method) or ':'(attribute) expected")
-                myProgram.addError()
-                return myProgram
+                data[0].setPs_err(f"line {data[0].token.line}: '('(method) or ':'(attribute) expected")
+                data[0].addError()
 
+        return data
+        
 def CLASS_func (data): 
     _className, _typeInherits = "" ,""
     # Verifica class
