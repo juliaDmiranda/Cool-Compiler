@@ -655,6 +655,10 @@ def OPs_func(data):
     PARÂMETROS
     -------------
     data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
     
     FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
@@ -677,8 +681,6 @@ def OPs_func(data):
     data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
 
     return  data
-
-
 
 def expr_line(data):
     """
