@@ -623,12 +623,12 @@ def AT_func(data):
     # cria filho 1
 
     # verificar TYPE
-    checkToken_N_reportSyntError(f"line {data[0].token.line}: TYPE expected in expression expr[@TYPE]...",
+    data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: TYPE expected in expression expr[@TYPE]...",
     Ids.TYPE_ID, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
     
     # verificar .
-    checkToken_N_reportSyntError(f"line {data[0].token.line}: '.' expected in expression expr[@TYPE]...",
+    data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: '.' expected in expression expr[@TYPE]...",
     Ids.DOT_ID, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
