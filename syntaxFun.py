@@ -899,80 +899,72 @@ def formal():
     Ids.TYPE_ID) 
     if(myProgram.situation == PC.SIG.EndOfProgram): return
     
-def METHOD_func():
-    if(myProgram.token.idEqual(Ids.C_PARENTHESIS)):
-        myProgram.nexToken(myProgram.situation) # pula o { encontrado extra pois terá mais de uma expressão
-        if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram 
+def METHOD_func(data, _Methodname):
+    """
+    SOBRE
+    --------
+    Função que verifica estrutura de um método declarado em Cool
+    
+    PARÂMETROS
+    -------------
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    """
+    _typeOfReturn = ""
+    _listOfFormals = []
+    if(data[0].token.idEqual(Ids.C_PARENTHESIS)):
+        data[0].nexToken(data[0].situation) # pula o { encontrado extra pois terá mais de uma expressão
+        if(data[0].situation == PC.SIG.EndOfProgram): return data 
     else:
         # verifica formal obrigatório
-        formal()
-        if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+        data, _listOfFormals  = formal(data)
+        if(data[0].situation == PC.SIG.EndOfProgram): return data
 
-        if(myProgram.situation == PC.SIG.TokenFound):
-            while(myProgram.token.idEqual(Ids.COMMA_ID)):
-                myProgram.nexToken(myProgram.situation) # pula o { encontrado extra pois terá mais de uma expressão
-                if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram 
-
-                formal()
-                if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-                # myProgram.nexToken(myProgram.situation)
-                # if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-        
         # verifica )
-        checkToken_N_reportSyntError(f"line {myProgram.token.line}: ')' expected in method declaration",
-        Ids.C_PARENTHESIS)
-        if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+        data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: ')' expected in method declaration",
+        Ids.C_PARENTHESIS, data)
+        if(data[0].situation == PC.SIG.EndOfProgram): return data
         
     # verifica :
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}: ':' expected",
-    Ids.COLON_ID)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+    data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: ':' expected",
+    Ids.COLON_ID, data)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
     
     # verifica TYPE
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}: TYPE expected",
-    Ids.TYPE_ID)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+    data, _typeOfReturn = checkToken_N_reportSyntError(f"line {data[0].token.line}: TYPE expected",
+    Ids.TYPE_ID, data)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
 
     # verifica {
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}: {'{'} expected",
-    Ids.O_BRACKETS)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+    data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: {'{'} expected",
+    Ids.O_BRACKETS, data)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
     
-    # verifica se tem { extra
-    if(myProgram.token.idEqual(Ids.O_BRACKETS)): # confere se o próximo(isto é, depois do { obrigatório) é {
-        myProgram.nexToken(myProgram.situation) # pula o { encontrado extra pois terá mais de uma expressão
-        if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram 
+    # ANT:  verifica se tem { extra
+    # RESP: não precisa, já tem uma expressão do tipo {expr;^+}
 
-        semiCommaErr = f"line {myProgram.token.line}: ';' expected"
-        while True:
-            expr()
-            if(not myProgram.token.idEqual(Ids.DOT_ID)):
-                if(not myProgram.token.idEqual(Ids.SEMICOLON_ID)):
-                    myProgram.setPs_err(f"line {myProgram.token.line}: {';'} expected in the end of an expression when more than one expression are added in a method")
-                    myProgram.addError()
-                    break
-                myProgram.nexToken(myProgram.situation) # pula ';'
-    
-                if(myProgram.token.idEqual(Ids.C_BRACKETS)): # evitar um erro de falta de expressão só porque o próximo é '}', o que seria correto nesse ponto do código
-                    break
-            else:
-                myProgram.nexToken(myProgram.situation)
-                if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram 
-
-        # verifica } fecha expr múltiplas
-        checkToken_N_reportSyntError(f"line {myProgram.token.line}: {'}'} expected. You have more than one expr",
-        Ids.C_BRACKETS)
-        if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
-
-    else: # method com uma única expressão
-        expr()
+    data = expr(data)
+    data = expr_line(data)
 
     # } fechar method
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}: {'}'} expected to close methods",
-    Ids.C_BRACKETS)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return myProgram
+    data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: {'}'} expected to close methods",
+    Ids.C_BRACKETS, data)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
 
-    return myProgram
+    data[1].newMethod(_Methodname, _typeOfReturn)
+    if _listOfFormals!=[]:
+        # print(data[1].obj.methods[-1].name)
+
+        for f in _listOfFormals:
+            data[1].newFormal(f[0], f[1])
+
+    return data
 
 def FEATURE_func(data):
     _name =  ""
@@ -1009,7 +1001,7 @@ def FEATURE_func(data):
                 data[0].addError()
 
         return data
-        
+
 def CLASS_func (data): 
     _className, _typeInherits = "" ,""
     # Verifica class
