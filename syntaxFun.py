@@ -783,7 +783,7 @@ def expr_line(data):
     
         
 def expr(data):
-    '''
+    """
     SOBRE
     -------------
     Função principal para tratar de expressões.
@@ -814,7 +814,7 @@ def expr(data):
     Pensar ainda em como vai ocorrer a ligação dos símbolos terminais
         - depende do nó anterior de um outro contexto?
         - em qual nó irei ligar?
-    '''
+    """
     # Terminais
     if(data[0].token.idEqual(Ids.INTEGER_ID) or data[0].token.idEqual(Ids.STRING_ID) or data[0].token.idEqual(Ids.TRUE_ID) or data[0].token.idEqual(Ids.FALSE_ID)):
         data[0].nexToken(PC.SIG.TokenFound)
