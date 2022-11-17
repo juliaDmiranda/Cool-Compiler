@@ -588,6 +588,45 @@ def ID_func(data):
     # sozinho "ID" --> não faz nada
 
     return data
+
+def DOT_func(data):
+    """
+    SOBRE
+    -------------
+    Função para tratar expressão .ID
+    Trata-se de uma parte de uma expressão com recusão a esquerda
+    de chamada de método.
+    
+    PARÂMETROS
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    Na estrutura da árvore semântica, .ID gera
+                    (DOT)   1 raiz
+                      |
+                      ID   1 ou mais filhos
+    """
+
+    # cria raiz
+        
+    # Consumir token lido
+    data[0].nexToken(PC.SIG.TokenFound)
+    if(data[0].situation == PC.SIG.EndOfProgram): return data
+
+    # cria filho (ID)
+        
+    data = expr(data) # chama expressão
+
+    data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+
+    return data
+
 def AT_func(data):
     """
     SOBRE
