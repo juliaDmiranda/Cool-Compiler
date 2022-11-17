@@ -876,28 +876,48 @@ def ATTRIBUTE_func():
     err1 = f"line {myProgram.token.line}: " + "No atribute Type declared"
     TYPE_ATT_EXPR_verif(err1)
 
-def formal():
-    '''
+def formal(data):
+    """
     SOBRE
     --------
-    Função que verifica estrutura de parÂmetro
-    '''
-    # Verifica ID
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}: ID not founded. Formal expected",
-    Ids.ID_ID, PC.SIG.IsFormal)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return
-    elif(myProgram.situation == PC.SIG.TokenNotFound): 
-        return
+    Função que verifica estrutura de parâmetro de um método.
     
-    # verifica  :
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}: ':' expected",
-    Ids.COLON_ID)
-    if(myProgram.situation == PC.SIG.EndOfProgram): return
+    PARÂMETROS
+    -------------
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
 
-    # verifica  TYPE
-    checkToken_N_reportSyntError(f"line {myProgram.token.line}: TYPE expected",
-    Ids.TYPE_ID) 
-    if(myProgram.situation == PC.SIG.EndOfProgram): return
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    ----------------------------
+    """
+    _listOfFormals = []
+    while True:
+        # Verifica ID
+        data, _nameOfFormal = checkToken_N_reportSyntError(f"line {data[0].token.line}: ID not founded. Formal expected",
+        Ids.ID_ID, data, PC.SIG.IsFormal)
+        if(data[0].situation == PC.SIG.EndOfProgram or data[0].situation == PC.SIG.TokenNotFound): 
+            return data
+        # verifica  :
+        data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: ':' expected in formal structure",
+        Ids.COLON_ID, data)
+        if(data[0].situation == PC.SIG.EndOfProgram): return data
+
+        # verifica  TYPE
+        data, _typeOfFormal = checkToken_N_reportSyntError(f"line {data[0].token.line}: TYPE expected",
+        Ids.TYPE_ID, data) 
+        if(data[0].situation == PC.SIG.EndOfProgram): return data
+
+
+        if(not data[0].token.idEqual(Ids.COMMA_ID)):
+            break
+        data[0].nexToken(data[0].situation) # pula o { encontrado extra pois terá mais de uma expressão
+        _listOfFormals.append((_nameOfFormal,_typeOfFormal))
+        if(data[0].situation == PC.SIG.EndOfProgram): return data
+    print(_listOfFormals)
+    return data, _listOfFormals
     
 def METHOD_func(data, _Methodname):
     """
