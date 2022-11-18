@@ -1,5 +1,7 @@
 from Id import Ids
 import Program_class as PC
+import TYPE_LIST as tl
+
 def ATT_func(data):
     """
     SOBRE
@@ -594,48 +596,6 @@ def O_BRACKETS_func(data):
 
     return data
 
-
-def ID_func(data):
-    """
-    SOBRE
-    -------------
-    Função para tratar expressões que começam com ID. Trata-se de uma expressão com recusão a direita.
-    ID --> expr 
-    ID --> epslon, isto é, somente o ID
-
-    PARÂMETROS
-    -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
-
-    RETORNO
-    -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
-    
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
-    ----------------------------
-    Na estrutura da árvore semântica, uma expressão inicializada com ID gerará 
-    um nó somente na outra função na qual foi chamada. Caso contrário geraria 
-    redundância de nó
-                    (IF)           1 raiz
-                /    |     \\
-            expr1  expr2  expr3    3 filhos
-    
-    """
-    # adicionar raiz
-    data[0].nexToken(PC.SIG.TokenFound)
-    if(data[0].situation == PC.SIG.EndOfProgram): return data # return data
-    
-    # <-
-    if(data[0].token.idEqual(Ids.ATT_ID)): # Verifica Atribuição
-        data = ATT_func(data)
-    # ()
-    elif(data[0].token.idEqual(Ids.O_PARENTHESIS)):
-        data = O_PARENTHESIS_func(data)
-    
-    # sozinho "ID" --> não faz nada
-
-    return data
-
 def DOT_func(data):
     """
     SOBRE
@@ -1144,10 +1104,14 @@ def CLASS_func (data):
     return data
 
 def program(line):
-    myProgram = PC.Program(line)
+    myProgram   = PC.Program(line)
+    myTypeList  = tl.Creator()
 
-    data = [myProgram, 0, 0]
+    data = [myProgram, myTypeList, 0]
 
     data = CLASS_func(data)
-
+    
+    for t in data[1].getTypes():
+        # print(t)
+        pass
     return data

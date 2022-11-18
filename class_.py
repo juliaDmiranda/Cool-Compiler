@@ -9,6 +9,7 @@ class Token():
         self.token = self.tiraT(str_)
         self.id = self.classify()
         self.line = line
+
     
     def idEqual(self, object) -> bool:
         if (self.id == object):
@@ -19,11 +20,11 @@ class Token():
     def __str__ (self):
         return f"{self.token} : {self.id.name}, line {self.line}\n"
 
-    def tiraT(self, str):
-        if(str!="\t"):
-            return str.replace("\t","")
+    def tiraT(self, _str):
+        if(_str!="\t"):
+            return _str.replace("\t","")
         else:
-            return str
+            return _str
             
     def classify(self):
         '''The method that classifies a given token in an identifier'''
