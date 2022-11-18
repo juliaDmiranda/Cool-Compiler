@@ -173,7 +173,11 @@ def LET_func(data):
     PARÂMETROS
     -------------
     data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
-    
+
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+
     FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
     Na estrutura da árvore semântica, uma expressão LET gera
@@ -192,17 +196,17 @@ def LET_func(data):
         # criar filho n
 
         # Verifica ID (info do nó)
-        checkToken_N_reportSyntError(f"line {data[0].token.line}: ID expected on 'let' structure",
+        data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: ID expected on 'let' structure",
         Ids.ID_ID, data)
         if(data[0].situation == PC.SIG.EndOfProgram): return data
         
         # verifica  :
-        checkToken_N_reportSyntError(f"line {data[0].token.line}: ':' expected on 'let' structure",
+        data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: ':' expected on 'let' structure",
         Ids.COLON_ID, data)
         if(data[0].situation == PC.SIG.EndOfProgram): return data
 
         # verificar TYPE (info do nó)
-        checkToken_N_reportSyntError(f"line {data[0].token.line}: TYPE expected on 'let' structure",
+        data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: TYPE expected on 'let' structure",
         Ids.TYPE_ID, data)
 
         if(data[0].token.idEqual(Ids.ATT_ID)):
@@ -223,7 +227,7 @@ def LET_func(data):
     # cria kanézimo filho (IN)
 
     # Verifica in
-    checkToken_N_reportSyntError(f"line {data[0].token.line}: 'in' was expected to close 'let' structure",
+    data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'in' was expected to close 'let' structure",
     Ids.IN_ID, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
     
@@ -232,7 +236,7 @@ def LET_func(data):
     data = expr_line(data) # recursão à esquerda
 
     return data
-        
+    
 def CASE_func(data):
     """
     SOBRE
@@ -313,7 +317,6 @@ def CASE_func(data):
     if(data[0].situation == PC.SIG.EndOfProgram): return data
     
     return data
-
 
 def NEW_func(data):
     """
