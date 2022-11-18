@@ -242,7 +242,11 @@ def CASE_func(data):
     PARÂMETROS
     -------------
     data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
-    
+
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+
     FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
     Na estrutura da árvore semântica, uma expressão CASE gera
@@ -265,7 +269,7 @@ def CASE_func(data):
     data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
 
     # Verifica Of
-    checkToken_N_reportSyntError(f"line {data[0].token.line}: 'of' expected on case statement",
+    data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'of' expected on case statement",
     Ids.OF_ID, data) 
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
@@ -282,15 +286,15 @@ def CASE_func(data):
         if(data[0].situation == PC.SIG.EndOfProgram): return data
         
         # verifica o :
-        checkToken_N_reportSyntError(f"line {data[0].token.line}:" + "':' missing in  'case' structure", Ids.COLON_ID, data)
+        data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:" + "':' missing in  'case' structure", Ids.COLON_ID, data)
         if(data[0].situation == PC.SIG.EndOfProgram): return data
         
         # verifica TYPE (filho)
-        checkToken_N_reportSyntError(f"line {data[0].token.line}:" + "TYPE missing in  'case' structure", Ids.TYPE_ID, data)
+        data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:" + "TYPE missing in  'case' structure", Ids.TYPE_ID, data)
         if(data[0].situation == PC.SIG.EndOfProgram): return data
         
         # verifica =>
-        checkToken_N_reportSyntError(f"line {data[0].token.line}:" + "'=>' missing in  'case' structure", Ids.F_ATT_ID, data)
+        data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:" + "'=>' missing in  'case' structure", Ids.F_ATT_ID, data)
         if(data[0].situation == PC.SIG.EndOfProgram): return data
         
         # cria filho n+2
@@ -300,15 +304,16 @@ def CASE_func(data):
         data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
 
         # ;
-        checkToken_N_reportSyntError(f"line {data[0].token.line}:" + "';' missing in  'case' structure", Ids.SEMICOLON_ID, data)
+        data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:" + "';' missing in  'case' structure", Ids.SEMICOLON_ID, data)
         if(data[0].situation == PC.SIG.EndOfProgram): return data
         
     # Verifica esac
-    checkToken_N_reportSyntError(f"line {data[0].token.line}:  'esac' was expected to close CASE structure",
+    data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:  'esac' was expected to close CASE structure",
     Ids.ESAC_ID, data) 
     if(data[0].situation == PC.SIG.EndOfProgram): return data
     
     return data
+
 
 def NEW_func(data):
     """
