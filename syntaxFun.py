@@ -1,6 +1,6 @@
 from Id import Ids
 import Program_class as PC
-import TYPE_LIST as tl
+import TYPE_LIST  as tl
 
 def ATT_func(data):
     """
@@ -932,7 +932,6 @@ def formal(data):
         Ids.TYPE_ID, data) 
         if(data[0].situation == PC.SIG.EndOfProgram): return data
 
-
         if(not data[0].token.idEqual(Ids.COMMA_ID)):
             break
         data[0].nexToken(data[0].situation) # pula o { encontrado extra pois terá mais de uma expressão
@@ -999,12 +998,10 @@ def METHOD_func(data, _Methodname):
     Ids.C_BRACKETS, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
-    data[1].newMethod(_Methodname, _typeOfReturn)
-    if _listOfFormals!=[]:
-        # print(data[1].obj.methods[-1].name)
-
-        for f in _listOfFormals:
-            data[1].newFormal(f[0], f[1])
+    data[1].newMethod(_Methodname, _typeOfReturn, _listOfFormals)
+    # if _listOfFormals!=[]:
+    #     for f in _listOfFormals:
+    #         data[1].newFormal(f[0], f[1])
 
     return data
 
@@ -1112,6 +1109,6 @@ def program(line):
     data = CLASS_func(data)
     
     for t in data[1].getTypes():
-        # print(t)
+        print(t)
         pass
     return data
