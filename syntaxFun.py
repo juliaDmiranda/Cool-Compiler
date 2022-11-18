@@ -146,7 +146,7 @@ def WHILE_func(data):
     data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
 
     # Verificar Loop
-    checkToken_N_reportSyntError(f"line {data[0].token.line}: 'loop' expected after 'while' structure condition",
+    data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'loop' expected after 'while' structure condition",
     Ids.LOOP_ID, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
@@ -157,12 +157,11 @@ def WHILE_func(data):
     data = expr_line(data) # recursão à esquerda
 
     # Verificar Pool
-    checkToken_N_reportSyntError(f"line {data[0].token.line}: 'pool' was expected to close 'while' structure",
+    data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'pool' was expected to close 'while' structure",
     Ids.POOL_ID, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
     return data
-
 
 def LET_func(data):
     """
@@ -236,7 +235,7 @@ def LET_func(data):
     data = expr_line(data) # recursão à esquerda
 
     return data
-    
+
 def CASE_func(data):
     """
     SOBRE
