@@ -60,7 +60,7 @@ def IF_func(data):
     pela função expr_line
     Na estrutura da árvore semântica, uma expressão IF gera
                         (IF)           1 raiz
-                    /    |     \\
+                    /    |     \\\\
                 expr1  expr2  expr3    3 filhos
     """
     # consome token lido
@@ -76,7 +76,7 @@ def IF_func(data):
     data = expr_line(data) # recursão à esquerda
 
     # Verifica Then
-    checkToken_N_reportSyntError(f"line {data[0].token.line}: 'then' was expected after the 1° 'if' condition",
+    data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'then' was expected after the 1° 'if' condition",
     Ids.THEN_ID, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
@@ -86,7 +86,7 @@ def IF_func(data):
     data = expr_line(data) # recursão à esquerda
 
     # Verifica ELSE
-    checkToken_N_reportSyntError(f"line {data[0].token.line}: 'else' was expected in 'if' structure",
+    data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'else' was expected in 'if' structure",
     Ids.ELSE_ID, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
@@ -96,7 +96,7 @@ def IF_func(data):
     data = expr_line(data) # recursão à esquerda
 
     # Verifica Fi
-    checkToken_N_reportSyntError(f"line {data[0].token.line}: 'fi' was expected to close 'if' structure",
+    data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'fi' was expected to close 'if' structure",
     Ids.FI_ID, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
