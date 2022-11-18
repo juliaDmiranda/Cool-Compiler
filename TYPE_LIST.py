@@ -45,8 +45,10 @@ class Method(Feauture):
     qtdFormal   = 0
     scope       = None
 
-    def __init__(self, _name, _type) -> None:
+    def __init__(self, _name, _type, _formals:list[Formal]) -> None:
         super().__init__(_name, _type)
+        for f in _formals:
+            self.setFormal(f[0],f[1])
 
     def setFormal(self, _name, _type):
         self.formals.append(Formal(_name, _type))
@@ -87,8 +89,8 @@ class Type():
         if(_parent != ""): self.parent = _parent
 
         
-    def newMethod(self,name, _type):
-        self.methods.append(Method(name, _type))
+    def newMethod(self,name, _type, _formals:list[Formal]):
+        self.methods.append(Method(name, _type, _formals))
     def newAttribute(self, name, _type):
         self.attributes.append(Attribute(name, _type))
 
@@ -189,11 +191,11 @@ class Creator():
             # print(f"Class {name} already exist!")
         
 
-    def newMethod(self, name, _type):
+    def newMethod(self, name, _type, _formals:list[Formal]):
         resp, _ = self.mySearcher.hasMethod(name, self.obj)
         if(True):
             # verificar se o tipo existe na lista de tipos
-            self.obj.newMethod(name, _type)
+            self.obj.newMethod(name, _type, _formals)
     
     def newFormal(self, name, _type):
         resp, _ = self.mySearcher.hasFormal(name, self.obj)
