@@ -7,7 +7,7 @@ def ATT_func(data):
     SOBRE
     -------------
     Função para tratar expressão ID <- expr, que representa uma atribuição.
-    Trata-se de uma parte de uma expressão com recusão a direita.
+    Trata-se de uma parte de uma expressão com recursão a direita.
     
     PARÂMETROS
     -------------
@@ -43,7 +43,7 @@ def ID_func(data):
     -------------
     Função para tratar expressões que começam com ID. Trata-se de uma expressão com recusão a direita.
     ID --> expr 
-    ID --> epslon, isto é, somente o ID
+    ID --> epsilon, isto é, somente o ID
 
     PARÂMETROS
     -------------
@@ -263,8 +263,8 @@ def LET_func(data):
         data[0].nexToken(data[0].situation)
         if(data[0].situation == PC.SIG.EndOfProgram): return
 
-    # ao sair do loop, a raís terá um total de k-1 filhos
-    # cria kanézimo filho (IN)
+    # ao sair do loop, a raiz terá um total de k-1 filhos
+    # cria kaézimo filho (IN)
 
     # Verifica in
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'in' was expected to close 'let' structure",
@@ -867,7 +867,7 @@ def checkToken_N_reportSyntError(errSTR, ID_comp, data, isFormal = False):
         data[0].nexToken(PC.SIG.TokenFound) # ir para o próximo token já que o atual foi analisado
         
     return data, typeOrName
-def ATTRIBUTE_func(data):
+def ATTRIBUTE_func(data,_AttName):
     """
     SOBRE
     ----------
@@ -886,7 +886,7 @@ def ATTRIBUTE_func(data):
     ----------------------------
     """
     # verificar TYPE
-    data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: " + "No atribute Type declared",
+    data, attType = checkToken_N_reportSyntError(f"line {data[0].token.line}: " + "No attribute Type declared",
     Ids.TYPE_ID, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
@@ -895,7 +895,7 @@ def ATTRIBUTE_func(data):
         data[0].nexToken(data[0].situation)
         if(data[0].situation == PC.SIG.EndOfProgram): return
         data = expr(data)
-
+    data[1][1].newAttribute(_AttName,attType)
     return data
 
 def formal(data):
@@ -998,10 +998,7 @@ def METHOD_func(data, _Methodname):
     Ids.C_BRACKETS, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
-    data[1].newMethod(_Methodname, _typeOfReturn, _listOfFormals)
-    # if _listOfFormals!=[]:
-    #     for f in _listOfFormals:
-    #         data[1].newFormal(f[0], f[1])
+    data[1][1].newMethod(_Methodname, _typeOfReturn, _listOfFormals)
 
     return data
 
@@ -1022,16 +1019,16 @@ def FEATURE_func(data):
         if(not data[0].token.idEqual(Ids.COLON_ID) and data[0].afToken().idEqual(Ids.O_PARENTHESIS)):
             data[0].nexToken(PC.SIG.TokenFound)
             if(data[0].situation == PC.SIG.EndOfProgram): return data
-            data = METHOD_func(data)
+            data = METHOD_func(data, _name)
         else:
             if(data[0].token.idEqual(Ids.COLON_ID)): # verifica :
                 data[0].nexToken(PC.SIG.TokenFound)
                 if(data[0].situation == PC.SIG.EndOfProgram): return data
-                data = ATTRIBUTE_func(data)
+                data = ATTRIBUTE_func(data,_name)
             elif(data[0].afToken().idEqual(Ids.COLON_ID)): # se o próximo for :
                 data[0].nexToken(PC.SIG.TokenFound)
                 if(data[0].situation == PC.SIG.EndOfProgram): return data
-                data = ATTRIBUTE_func(data)
+                data = ATTRIBUTE_func(data, _name)
             else:
                 data[0].nexToken(PC.SIG.TokenFound)
                 if(data[0].situation == PC.SIG.EndOfProgram): return data
@@ -1062,7 +1059,8 @@ def CLASS_func (data):
         Ids.TYPE_ID, data)
         if(data[0].situation == PC.SIG.EndOfProgram): return data
     
-    data[1].newType(_className, _typeInherits)
+    data[1][1] = tl.Type(_className, _typeInherits)
+
 
     # Verifica {
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:" + " '{'" + f" expected after class declaration",
@@ -1089,7 +1087,7 @@ def CLASS_func (data):
         data[0].addError()
         return data
 
-    data[1].addType()
+    data[1][0].addType(data[1][1])
     
     # verifica ;
     data, _ = checkToken_N_reportSyntError(endClassError,
@@ -1104,11 +1102,10 @@ def program(line):
     myProgram   = PC.Program(line)
     myTypeList  = tl.Creator()
 
-    data = [myProgram, myTypeList, 0]
+    data = [myProgram, [myTypeList,0], 0]
 
     data = CLASS_func(data)
     
-    for t in data[1].getTypes():
-        print(t)
-        pass
+    data[1][0].printTypes()
+    
     return data
