@@ -1069,7 +1069,11 @@ def CLASS_func (data):
     - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
 
     FORMAÇÃO DA ÁRVORE SINTÁTICA
-    ----------------------------
+    ----------------------------   
+    Na estrutura da ÁRVORE SINTÁTICA, uma classe gera
+                    (CLASS)   1 raiz
+                       |
+                    FEATURE   1 ou mais filhos
     
     """
     _className, _typeInherits = "" ,""
