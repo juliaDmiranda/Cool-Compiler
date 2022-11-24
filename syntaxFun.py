@@ -11,15 +11,15 @@ def ATT_func(data):
     
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
 
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
     
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
-    Na estrutura da árvore semântica, ID <- expr gera
+    Na estrutura da ÁRVORE SINTÁTICA, ID <- expr gera
                     (ID)   1 raiz
                       |
                      expr   1
@@ -47,15 +47,15 @@ def ID_func(data):
 
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
 
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
     
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
-    Na estrutura da árvore semântica, uma expressão inicializada com ID gerará 
+    Na estrutura da ÁRVORE SINTÁTICA, uma expressão inicializada com ID gerará 
     um nó somente na outra função na qual foi chamada. Caso contrário geraria 
     redundância de nó
                     (IF)           1 raiz
@@ -87,19 +87,19 @@ def IF_func(data):
 
     PARÂMETROS
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
 
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
     
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
     Lembrando que é possível que alguma expressão
     com recursão a esquerda seja chamada em algum 
     momento (expr + expr, por exemplo) que será tratada
     pela função expr_line
-    Na estrutura da árvore semântica, uma expressão IF gera
+    Na estrutura da ÁRVORE SINTÁTICA, uma expressão IF gera
                         (IF)           1 raiz
                     /    |     \\\\
                 expr1  expr2  expr3    3 filhos
@@ -155,20 +155,20 @@ def WHILE_func(data):
     
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
 
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
     
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
     Lembrando que é possível que alguma expressão
         com recursão a esquerda seja chamada em algum 
         momento (expr + expr, por exemplo) que será tratada
         pela função expr_line
         
-        - Na estrutura da árvore semântica, uma expressão IF gera
+        - Na estrutura da ÁRVORE SINTÁTICA, uma expressão IF gera
                     (WHILE)     1 raiz
                     /    \\
                 expr1  expr2    2 filhos
@@ -212,15 +212,15 @@ def LET_func(data):
 
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
 
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
 
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
-    Na estrutura da árvore semântica, uma expressão LET gera
+    Na estrutura da ÁRVORE SINTÁTICA, uma expressão LET gera
                     (LET)     1 raiz
                       |
                   ID&TYPE1*   1 ou mais filhos
@@ -285,15 +285,15 @@ def CASE_func(data):
     
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
 
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
 
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
-    Na estrutura da árvore semântica, uma expressão CASE gera
+    Na estrutura da ÁRVORE SINTÁTICA, uma expressão CASE gera
                 (CASE)        1 raiz
                 /    \\
             expr1  ID&TYPE    2 filhos
@@ -368,15 +368,15 @@ def NEW_func(data):
 
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
 
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
     
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
-    Na estrutura da árvore semântica, uma expressão CASE gera
+    Na estrutura da ÁRVORE SINTÁTICA, uma expressão CASE gera
                     (NEW)   1 raiz
                       |
                     TYPE    1 filho
@@ -406,15 +406,15 @@ def ISVOID_func(data):
 
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
 
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
     
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
-    Na estrutura da árvore semântica, uma expressão ISVOID gera
+    Na estrutura da ÁRVORE SINTÁTICA, uma expressão ISVOID gera
                   (ISVOID)   1 raiz
                       |
                      expr    1 filho
@@ -440,15 +440,15 @@ def NOT_func(data):
     
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
 
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
     
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
-    Na estrutura da árvore semântica, uma expressão NOT gera
+    Na estrutura da ÁRVORE SINTÁTICA, uma expressão NOT gera
                     (NOT)   1 raiz
                       |
                      expr   1 filho
@@ -475,15 +475,15 @@ def TIDE_func(data):
     
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
 
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
     
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
-    Na estrutura da árvore semântica, uma expressão TIDE gera
+    Na estrutura da ÁRVORE SINTÁTICA, uma expressão TIDE gera
                     (TIDE)   1 raiz
                       |
                      expr   1 filho
@@ -509,15 +509,15 @@ def O_PARENTHESIS_func(data):
 
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
 
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
     
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
-    Na estrutura da árvore semântica, uma expressão (expr) gera
+    Na estrutura da ÁRVORE SINTÁTICA, uma expressão (expr) gera
                     ('(')   1 raiz
                       |
                      expr   1 filho
@@ -554,15 +554,15 @@ def O_BRACKETS_func(data):
     
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
 
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
     
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
-    Na estrutura da árvore semântica, uma expressão {[[expr;]]^+} gera
+    Na estrutura da ÁRVORE SINTÁTICA, uma expressão {[[expr;]]^+} gera
                     ('{')   1 raiz
                       |
                      expr   1 ou mais filhos
@@ -606,15 +606,15 @@ def DOT_func(data):
     
     PARÂMETROS
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
 
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
     
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
-    Na estrutura da árvore semântica, .ID gera
+    Na estrutura da ÁRVORE SINTÁTICA, .ID gera
                     (DOT)   1 raiz
                       |
                       ID   1 ou mais filhos
@@ -644,15 +644,15 @@ def AT_func(data):
 
     PARÂMETROS
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
 
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
     
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
-    Na estrutura da árvore semântica, .ID gera
+    Na estrutura da ÁRVORE SINTÁTICA, .ID gera
                     (AT)   1 raiz
                       |
                     TYPE*   1 ou mais filhos
@@ -700,15 +700,15 @@ def OPs_func(data):
     
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
 
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
     
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
-    Na estrutura da árvore semântica, operadores lógicos e aritiméticos geram
+    Na estrutura da ÁRVORE SINTÁTICA, operadores lógicos e aritiméticos geram
                 <exp>   (estrutura de recursão anterior)
                      \\
                      (OP)   1 raiz
@@ -738,13 +738,13 @@ def expr_line(data):
 
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
 
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
 
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
     """
     while True:
@@ -778,15 +778,15 @@ def expr(data):
 
     PARÂMETROS
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
 
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
    
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
-    A formação da árvore semântica é tratada separadamente para cada tipo de expressão identificada em Cool.
+    A formação da ÁRVORE SINTÁTICA é tratada separadamente para cada tipo de expressão identificada em Cool.
     Isso quer dizer que, em cada função destinada a cada um dos grupos de expressões dispostos abaixo, com 
     exceção de expressões atômicas as quais serão tratadas diretamente na chamada de expr(), haverá a adição
     de nós segundo a regra sintática de cada expressão.
@@ -844,9 +844,9 @@ def checkToken_N_reportSyntError(errSTR, ID_comp, data, isFormal = False):
     
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
 
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
     """
     typeOrName = ""
@@ -876,13 +876,13 @@ def ATTRIBUTE_func(data,_AttName):
     
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
     
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
 
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
     """
     # verificar TYPE
@@ -906,13 +906,13 @@ def formal(data):
     
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
     
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
 
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
     """
     _listOfFormals = []
@@ -947,13 +947,13 @@ def METHOD_func(data, _Methodname):
     
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
     
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
 
-    FORMAÇÃO DA ÁRVORE SEMÂNTICA
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
     """
     _typeOfReturn = ""
@@ -1001,7 +1001,24 @@ def METHOD_func(data, _Methodname):
 
     return data
 
-def FEATURE_func(data):
+def FEATURE_func(data):    
+    """
+    SOBRE
+    --------
+    Função que verifica a estrutura de uma feature de uma classe em Cool
+    
+    PARÂMETROS
+    -------------
+    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
+    
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
+
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    ----------------------------
+    
+    """
     _name =  ""
     # Verifica ID
     data, _name = checkToken_N_reportSyntError(f"line {data[0].token.line}: ID was expected to initialize a feature",
@@ -1038,6 +1055,23 @@ def FEATURE_func(data):
         return data
 
 def CLASS_func (data): 
+    """
+    SOBRE
+    --------
+    Função que verifica a estrutura de uma classe em Cool
+    
+    PARÂMETROS
+    -------------
+    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
+    
+    RETORNO
+    -------------
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
+
+    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    ----------------------------
+    
+    """
     _className, _typeInherits = "" ,""
     # Verifica class
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:" + "Must be a class declaration",
@@ -1093,7 +1127,6 @@ def CLASS_func (data):
     data, _ = checkToken_N_reportSyntError(endClassError,
     Ids.SEMICOLON_ID, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
-    # print(f"CHAMADA {_className}\n")
     data = CLASS_func(data)
 
     return data
