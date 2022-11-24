@@ -1,6 +1,7 @@
 from Id import Ids
 import Program_class as PC
 import TYPE_LIST  as tl
+import synTree as ST
 
 def ATT_func(data):
     """
@@ -25,6 +26,7 @@ def ATT_func(data):
                      expr   1
     """
     # cria raiz
+    tempNode = ST.Attribution(data[0].token.token) 
 
     # consome token lido
     data[0].nexToken(PC.SIG.TokenFound)
@@ -34,9 +36,16 @@ def ATT_func(data):
         
     data = expr(data) # chama expressão
 
+    child = [data[2]] # possível volta de expressão
+
     data = expr_line(data) # recursão à esquerda
+    
+    child.append(data[2]) # possível volta de expressão
+
+    data[2] = tempNode.addChild(child) # vira o novo dado temporário que seria o retorno para o pai dele
 
     return data
+
 def ID_func(data):
     """
     SOBRE
@@ -77,6 +86,7 @@ def ID_func(data):
     # sozinho "ID" --> não faz nada
 
     return data
+
 def IF_func(data):
     """
     SOBRE
@@ -109,12 +119,16 @@ def IF_func(data):
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
     # cria raiz do tipo IF
-
+    tempNode = ST.If()
+    
     # cria filho 1
-        
     data = expr(data) # chama expressão
+    child = [data[2]] # possível volta de expressão
 
     data = expr_line(data) # recursão à esquerda
+    child.append(data[2]) # possível volta de expressão
+
+    data[2] = tempNode.addChild(child) # vira o novo dado temporário que seria o retorno para o pai dele
 
     # Verifica Then
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'then' was expected after the 1° 'if' condition",
@@ -123,8 +137,12 @@ def IF_func(data):
 
     # cria filho 2
     data = expr(data) # chama expressão
+    child = [data[2]] # possível volta de expressão
 
     data = expr_line(data) # recursão à esquerda
+    child.append(data[2]) # possível volta de expressão
+    
+    data[2] = tempNode.addChild(child) # vira o novo dado temporário que seria o retorno para o pai dele
 
     # Verifica ELSE
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'else' was expected in 'if' structure",
@@ -133,8 +151,12 @@ def IF_func(data):
 
     # cria filho 3
     data = expr(data) # chama expressão
+    child = [data[2]] # possível volta de expressão
 
     data = expr_line(data) # recursão à esquerda
+    child.append(data[2]) # possível volta de expressão
+    
+    data[2] = tempNode.addChild(child) # vira o novo dado temporário que seria o retorno para o pai dele
 
     # Verifica Fi
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'fi' was expected to close 'if' structure",
@@ -759,8 +781,7 @@ def expr_line(data):
         else: break
 
     data = expr(data)
-    return data
-    
+    return data  
         
 def expr(data):
     """
@@ -989,6 +1010,9 @@ def METHOD_func(data, _Methodname):
     # ANT:  verifica se tem { extra
     # RESP: não precisa, já tem uma expressão do tipo {expr;^+}
 
+    '''
+    Trecho a adicionar as expressões aos métodos
+    '''
     data = expr(data)
     data = expr_line(data)
 
@@ -1127,6 +1151,9 @@ def CLASS_func (data):
         return data
         
     data[1][0].addType(data[1][1])
+
+    # data[2][0].append(data[2][1])
+
     # verifica ;
     data, _ = checkToken_N_reportSyntError(endClassError,
     Ids.SEMICOLON_ID, data)
@@ -1138,8 +1165,8 @@ def CLASS_func (data):
 def program(line):
     myProgram   = PC.Program(line)
     myTypeList  = tl.Creator()
-
-    data = [myProgram, [myTypeList,0], 0]
+    mySintTree  = []
+    data = [myProgram, [myTypeList,0], 0] # data[2] -> dados temporários
 
     data = CLASS_func(data)
     

@@ -1,7 +1,6 @@
 import os
-
-
-class Feature():
+import synTree as ST
+class Feature(ST.Node):
     """
     Classe responsável por armazenar informações de uma feature
 
@@ -35,18 +34,18 @@ class Feature():
         return f" {self.name}-{self._type}\n"
 
 
-class Method(Feature):
+class Method(ST.Node):
     """
     Classe responsável por armazenar informações de um método
     """
-    # name, _type = "","" 
+    name, _type = "","" 
     formals     = []
     qtdFormal   = 0
     scope       = None
 
-    def __init__(self, _name, _Type, _formals):
-        super().__init__(_name, _Type)
-
+    def __init__(self, _name, _type, _formals):
+        self.name = _name
+        self._type = _type
         self.formals = _formals
         self.qtdFormal = len(self.formals)
 
@@ -55,15 +54,29 @@ class Method(Feature):
         if(self.formals != []):
             print(str(self.formals))
 
-class Attribute(Feature):
+    def addChild(self, obj):
+        if(self.children != None):
+            print("Node METHOD do not have more then one child")
+        else:
+            self.children = obj  
+
+class Attribute(ST.Node):
     """
     Função para armazenar informações de atributos de um método
     """
+    name, _type = "","" 
     def __init__(self, _name, _type) -> None:
-        super().__init__(_name, _type)
+        self.name = _name
+        self._type = _type
 
     def show(self):
-        print("(A) " + super().__str__())
+        print("(A) " +  f" {self.name}-{self._type}\n")
+
+    def addChild(self, obj):
+        if(self.children != None):
+            print("Node ATTRIBUTE do not have more then one child")
+        else:
+            self.children = obj  
 
 class Type():
     """
@@ -111,6 +124,8 @@ class Creator():
         self.typeList.append(obj)
 
     def printTypes(self):
+        os.system("CLS")
         for _type in self.typeList:
             _type.show()
             os.system("PAUSE")
+            os.system("CLS")

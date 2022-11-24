@@ -1,10 +1,10 @@
 class Node():
-    name  = ""
-    _type = ""
+    # name  = ""# inútil
+    # _type = ""# inútil
     children = None
-    def __init__(self, name, _type) -> None:
-        self.name = name
-        self._type = _type
+    # def __init__(self, name, _type) -> None:
+    #     self.name = name
+    #     self._type = _type
 
     def addChild(self, obj):
         pass
@@ -34,7 +34,21 @@ class Class (Node):
             print("Node operator do not have more then one child")
         else:
             self.children = obj
+class Attribution(Node):
+    '''
+    Estrutura para ID <- expr
 
+    OBS.:
+        - _type:  corresponde ao retorno da expressão
+    '''
+    def __init__(self, name) -> None:
+        self.idName = name
+
+    def addChild(self, obj):
+        if(self.children != None):
+            print("Node attribution do not have more then one child")
+        else:
+            self.children = obj
 class Operator(Node):
     '''
     Estrutura para operadores +, -, *, /, isvoid, ~, not
@@ -42,9 +56,10 @@ class Operator(Node):
     OBS.:
         - _type:  corresponde ao retorno da expressão
     '''
+    opType = None
+    opName = None 
     def __init__(self, name, _type) -> None:
-        super().__init__(name, _type)
-
+        self.opName = name
     def addChild(self, obj):
         if(self.children != None):
             print("Node operator do not have more then one child")
@@ -58,8 +73,8 @@ class If(Node):
     OBS.:
         - _type:  corresponde ... 
     '''
+    _type = None
     def __init__(self, name, _type) -> None:
-        super().__init__(name, _type)
         self.children = []
     def addChild(self, obj):
         if(len(self.children) == 3):
@@ -82,3 +97,4 @@ class While(Node):
             print("Node While do not have more then 2 child")
         else:
             self.children.append(obj)
+
