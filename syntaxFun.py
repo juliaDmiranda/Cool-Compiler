@@ -932,12 +932,11 @@ def formal(data):
         Ids.TYPE_ID, data) 
         if(data[0].situation == PC.SIG.EndOfProgram): return data
 
+        _listOfFormals.append((_nameOfFormal,_typeOfFormal))
         if(not data[0].token.idEqual(Ids.COMMA_ID)):
             break
         data[0].nexToken(data[0].situation) # pula o { encontrado extra pois terá mais de uma expressão
-        _listOfFormals.append((_nameOfFormal,_typeOfFormal))
         if(data[0].situation == PC.SIG.EndOfProgram): return data
-    print(_listOfFormals)
     return data, _listOfFormals
     
 def METHOD_func(data, _Methodname):
@@ -1060,6 +1059,8 @@ def CLASS_func (data):
         if(data[0].situation == PC.SIG.EndOfProgram): return data
     
     data[1][1] = tl.Type(_className, _typeInherits)
+    data[1][1].methods = []
+    data[1][1].attributes = []
 
 
     # Verifica {
@@ -1086,14 +1087,13 @@ def CLASS_func (data):
         data[0].setPs_err(endClassError)
         data[0].addError()
         return data
-
+        
     data[1][0].addType(data[1][1])
-    
     # verifica ;
     data, _ = checkToken_N_reportSyntError(endClassError,
     Ids.SEMICOLON_ID, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
-
+    # print(f"CHAMADA {_className}\n")
     data = CLASS_func(data)
 
     return data
@@ -1107,5 +1107,5 @@ def program(line):
     data = CLASS_func(data)
     
     data[1][0].printTypes()
-    
+
     return data
