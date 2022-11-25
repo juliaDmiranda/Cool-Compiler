@@ -1,3 +1,4 @@
+import time
 from Id import Ids
 import Program_class as PC
 import TYPE_LIST  as tl
@@ -40,7 +41,8 @@ def ATT_func(data):
 
     data = expr_line(data) # recursão à esquerda
     
-    child.append(data[2]) # possível volta de expressão
+    if(data[2]!=[]): # isso para caso não tenha nenhum caso de recursão a esquerda
+        child.append(data[2]) # possível volta de expressão
 
     data[2] = tempNode.addChild(child) # vira o novo dado temporário que seria o retorno para o pai dele
 
@@ -126,7 +128,8 @@ def IF_func(data):
     child = [data[2]] # possível volta de expressão
 
     data = expr_line(data) # recursão à esquerda
-    child.append(data[2]) # possível volta de expressão
+    if(data[2]!=[]):
+        child.append(data[2]) # possível volta de expressão
 
     data[2] = tempNode.addChild(child) # vira o novo dado temporário que seria o retorno para o pai dele
 
@@ -140,7 +143,8 @@ def IF_func(data):
     child = [data[2]] # possível volta de expressão
 
     data = expr_line(data) # recursão à esquerda
-    child.append(data[2]) # possível volta de expressão
+    if(data[2]!=[]):
+        child.append(data[2]) # possível volta de expressão
     
     data[2] = tempNode.addChild(child) # vira o novo dado temporário que seria o retorno para o pai dele
 
@@ -154,7 +158,8 @@ def IF_func(data):
     child = [data[2]] # possível volta de expressão
 
     data = expr_line(data) # recursão à esquerda
-    child.append(data[2]) # possível volta de expressão
+    if(data[2]!=[]):
+        child.append(data[2]) # possível volta de expressão
     
     data[2] = tempNode.addChild(child) # vira o novo dado temporário que seria o retorno para o pai dele
 
@@ -201,13 +206,15 @@ def WHILE_func(data):
     if(data[0].situation == PC.SIG.EndOfProgram): return data
     
     # cria raiz do tipo WHILE
-
-    # cria filho 1
-        
+    tempNode = ST.While()
+    
+    # cria filho 1    
     data = expr(data) # chama expressão
+    child = [data[2]]
 
     data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
-
+    if(data[2]!=[]):
+        child.append(data[2]) # possível volta de expressão
     # Verificar Loop
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'loop' expected after 'while' structure condition",
     Ids.LOOP_ID, data)
@@ -216,9 +223,14 @@ def WHILE_func(data):
     # cria filho 2
         
     data = expr(data) # chama expressão
+    child = [data[2]]
 
     data = expr_line(data) # recursão à esquerda
-
+    if(data[2]!=[]):
+        child.append(data[2]) # possível volta de expressão
+    
+    data[2] = tempNode.addChild(child) # vira o novo dado temporário que seria o retorno para o pai dele
+   
     # Verificar Pool
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'pool' was expected to close 'while' structure",
     Ids.POOL_ID, data)
@@ -452,6 +464,7 @@ def ISVOID_func(data):
     data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
 
     return data
+
 def NOT_func(data):
     """
     SOBRE
@@ -769,18 +782,25 @@ def expr_line(data):
     FORMAÇÃO DA ÁRVORE SINTÁTICA
     ----------------------------
     """
+    tempNode = []
     while True:
         # modificados para remover recursão a esquerda # +, -, *, /, <, <=, =
         if(data[0].token.idEqual(Ids.PLUS_ID) or data[0].token.idEqual(Ids.MINUS_ID) or data[0].token.idEqual(Ids.ASTERISK_ID) or data[0].token.idEqual(Ids.F_SLASH_ID) or data[0].token.idEqual(Ids.LESS_THAN_ID) or data[0].token.idEqual(Ids.LESS_THAN_EQUAL_TO_ID) or data[0].token.idEqual(Ids.EQUAL_TO_ID)):
             data = OPs_func(data)
+            tempNode.append(data[2])
         elif(data[0].token.idEqual(Ids.AT_ID)): # concerteza ao ter um @ terá de ter TYPE.ID depois
             data = AT_func(data)
-
+            tempNode.append(data[2])
         elif(data[0].token.idEqual(Ids.DOT_ID)): # concerteza ao ter um . terá de ter ID depois
             data = DOT_func(data)
+            tempNode.append(data[2])
         else: break
-
     data = expr(data)
+    tempNode.append(data[2])
+    
+    data[2] = None # forçar "limpeza"
+    data[2] = tempNode
+
     return data  
         
 def expr(data):
@@ -822,9 +842,9 @@ def expr(data):
         if(data[0].situation == PC.SIG.EndOfProgram): return data
 
     # Recursões a direita
-    
-    if(data[0].token.idEqual(Ids.ID_ID)):  data = ID_func(data) #ID
-    
+    if(data[0].token.idEqual(Ids.ID_ID)):  
+        data = ID_func(data) #ID
+
     if(data[0].token.idEqual(Ids.IF_ID)):  data = IF_func(data) #IF
     
     if(data[0].token.idEqual(Ids.WHILE_ID)): data = WHILE_func(data) #WHILE
@@ -888,6 +908,7 @@ def checkToken_N_reportSyntError(errSTR, ID_comp, data, isFormal = False):
         data[0].nexToken(PC.SIG.TokenFound) # ir para o próximo token já que o atual foi analisado
         
     return data, typeOrName
+
 def ATTRIBUTE_func(data,_AttName):
     """
     SOBRE
@@ -1168,8 +1189,8 @@ def program(line):
     mySintTree  = []
     data = [myProgram, [myTypeList,0], 0] # data[2] -> dados temporários
 
+    start_time = time.time()
     data = CLASS_func(data)
-    
-    data[1][0].printTypes()
+    print(time.time() - start_time, "seconds")
 
     return data

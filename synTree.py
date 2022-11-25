@@ -74,13 +74,22 @@ class If(Node):
         - _type:  corresponde ... 
     '''
     _type = None
-    def __init__(self, name, _type) -> None:
+    def __init__(self, name=0, _type=0) -> None:
         self.children = []
     def addChild(self, obj):
         if(len(self.children) == 3):
             print("Node If do not have more then 3 child")
         else:
             self.children.append(obj)
+
+class Terminals():
+    value = None
+    _type = None
+
+    def __init__(self, value, _type) -> None:
+        self.value = 0
+        self._type = _type
+
 class While(Node):
     '''
     Estrutura para expressão while
@@ -88,8 +97,8 @@ class While(Node):
     OBS.:
         - _type:  corresponde ... 
     '''
-    def __init__(self, name, _type) -> None:
-        super().__init__(name, _type)
+    def __init__(self, name=0, _type=0) -> None:
+        # super().__init__(name, _type)
         self.children = []
 
     def addChild(self, obj):
