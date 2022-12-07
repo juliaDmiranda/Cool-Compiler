@@ -8,6 +8,7 @@ class tag (Enum):
     CLASS       = auto()
     CASE        = auto()
     CASEOPT     = auto()
+    DOT         = auto()
     EXPRL       = auto()
     FUNCALL     = auto()
     FUNCALLID   = auto()
@@ -32,9 +33,9 @@ class Node():
     id_obj = itertools.count()
     label, token ,children,_type, line = None,None, None, None, None # para a análise semântica
     name = ""
+    father = "-"
 
-    def __init__ (self, fatherId):
-        self.father = fatherId
+    def __init__ (self):
         self.id = next(Node.id_obj)
 
     def setLabel(self, label):
@@ -60,6 +61,8 @@ class Node():
         self.line = line
 
     def addChild(self, obj="NULL", hasFormals = False):
+        if(isinstance(obj, Node)):
+            obj.father = self.id
         if(self.children == None):
             self.children = []
         if(hasFormals):
@@ -79,100 +82,30 @@ class Node():
     def __str__(self) -> str:
         if (self.label == tag.METHOD):
             try:
-                return f"<{self.getLine()}>[{str(self.label.name)}] {self.getName()} : {self._type} : {self.formals}"
+                return f"(f:{self.father}/id:{self.id})<{self.getLine()}>[{str(self.label.name)}] {self.getName()} : {self._type} : {self.formals}"
             except:
-                return f"<{self.getLine()}>[{str(self.label.name)}]{self.getName()} : {self._type}"
+                return f"(f:{self.father}/id:{self.id})<{self.getLine()}>[{str(self.label.name)}]{self.getName()} : {self._type}"
         else:
-            return f"<{self.getLine()}>[{str(self.label.name)}]{self.getName()} : {self._type}"
+            return f"(f:{self.father}/id:{self.id})<{self.getLine()}>[{str(self.label.name)}]{self.getName()} : {self._type}"
             
 
-def showTree_aux(myTree:Node):
+def showTree_aux(myTree:Node, file, print_ = False):
     try:
         if(type(myTree) != list):
-            print(myTree)
+            if(print_):
+                print(myTree)
+            file.write("\n"+str(myTree))
             if(type(myTree) == Node):
                 if(myTree.children != None):
                     if(len(myTree.children) != 0):
                         for child in myTree.children:
-                            showTree_aux(child)      
-        # elif(len(myTree.children) != 0):
-        #     print("ENTREIIIIIIIIIIIII")
-        #     for child in myTree.children:
-        #         showTree_aux(child)
+                            file = showTree_aux(child, file)   
+        return file
     except Exception as ex:
         print(ex.args)
         print("\n\n\n>>>>>>>>>>>>>",myTree.name)
-def showTree(root):
+
+def showTree(root, print_ = False):
+    file = open("synTree", "w")
     for c in root:
-        showTree_aux(c)
-# class Attribution(Node):
-#     '''
-#     Estrutura para ID <- expr
-
-#     OBS.:
-#         - _type:  corresponde ao retorno da expressão
-#     '''
-#     def addChild(self, obj):
-#         if(len(self.children) == 1):
-#             print("Node attribution do not have more then 1 child")
-#         else:
-#             self.children.append(obj)
-
-
-# class Operator(Node):
-#     '''
-#     Estrutura para operadores +, -, *, /, isvoid, ~, not
-
-#     OBS.:
-#         - _type:  corresponde ao retorno da expressão
-#     '''
-#     def addChild(self, obj):
-#         if(len(self.children) == 1):
-#             print("Node operator do not have more then 1 child")
-#         else:
-#             super().addChild(obj)
-
-# class If(Node):
-#     '''
-#     Estrutura para expressão if
-
-#     OBS.:
-#         - _type:  corresponde ... 
-#     '''
-
-#     def addChild(self, obj):
-#         if(len(self.children) == 3):
-#             print("Node If do not have more then 3 child")
-#         else:
-#             super().addChild(obj)
-    
-#     def __str__(self):
-#         return f"(IF)\n"
-
-# class Terminals(Node):
-#     def addChild(self, obj):
-#         super().addChild(obj)
-
-# class While(Node):
-#     '''
-#     Estrutura para expressão while
-
-#     OBS.:
-#         - _type:  corresponde ... 
-#     '''
-#     def addChild(self, obj):
-#         if(len(self.children) == 2):
-#             print("Node While do not have more then 2 child")
-#         else:
-#             super().addChild(obj)
-
-# class ID(Node):
-#     def addChild(self, obj):
-#         if(len(self.children) == 1):
-#             print("Node ID do not have more then 1 child")
-#         else:
-#             super().addChild(obj)
-
-# class Parenthesis(Node):
-#     def addChild(self, obj):
-#         super().addChild(obj)
+        file = showTree_aux(c, file, print_)
