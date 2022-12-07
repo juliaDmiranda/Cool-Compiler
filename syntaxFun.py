@@ -1,10 +1,10 @@
-import time
+import os
 from Id import Ids
 import Program_class as PC
-import TYPE_LIST  as tl
-import synTree as ST
+import TYPE_LIST_bf  as tl
+import synTree as  st
 
-def ATT_func(data):
+def ATT_func(data, myTree: st.Node):
     """
     SOBRE
     -------------
@@ -13,21 +13,23 @@ def ATT_func(data):
     
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
-
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
     
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
-    Na estrutura da ÁRVORE SINTÁTICA, ID <- expr gera
+    Na estrutura da árvore semântica, ID <- expr gera
                     (ID)   1 raiz
                       |
                      expr   1
     """
     # cria raiz
-    tempNode = ST.Attribution(data[0].token.token) 
+    tmp = st.Node()
+    tmp.setLabel(st.tag.SETID) # não precisa setar de novo(fazer teste depois)
+    tmp.setLine(data[0].token.line)
+    tmp.setName(data[0].token.token)
 
     # consome token lido
     data[0].nexToken(PC.SIG.TokenFound)
@@ -35,226 +37,201 @@ def ATT_func(data):
 
     # cria filho 1
         
-    data = expr(data) # chama expressão
+    data, tmp = expr(data, tmp) # chama expressão
 
-    child = [data[2]] # possível volta de expressão
+    data, tmp = expr_line(data, tmp) # recursão à esquerda
 
-    data = expr_line(data) # recursão à esquerda
-    
-    if(data[2]!=[]): # isso para caso não tenha nenhum caso de recursão a esquerda
-        child.append(data[2]) # possível volta de expressão
+    myTree.addChild(tmp)
+    return data, myTree
 
-    data[2] = tempNode.addChild(child) # vira o novo dado temporário que seria o retorno para o pai dele
-
-    return data
-
-def ID_func(data):
+def ID_func(data, myTree: st.Node):
     """
     SOBRE
     -------------
     Função para tratar expressões que começam com ID. Trata-se de uma expressão com recusão a direita.
     ID --> expr 
     ID --> epsilon, isto é, somente o ID
-
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
-
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
     
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
-    Na estrutura da ÁRVORE SINTÁTICA, uma expressão inicializada com ID gerará 
+    Na estrutura da árvore semântica, uma expressão inicializada com ID gerará 
     um nó somente na outra função na qual foi chamada. Caso contrário geraria 
     redundância de nó
-                    (IF)           1 raiz
+                    (ID)           1 raiz
                 /    |     \\
             expr1  expr2  expr3    3 filhos
     
     """
     # adicionar raiz
+    tmp = st.Node()
+    tmp.setLabel(st.tag.ID)
+    tmp.setName(data[0].token.token)
+    tmp.setLine(data[0].token.line)
+
     data[0].nexToken(PC.SIG.TokenFound)
-    if(data[0].situation == PC.SIG.EndOfProgram): return data # return data
+    if(data[0].situation == PC.SIG.EndOfProgram): 
+        myTree.addChild(tmp)
+        return data, myTree # return data
     
     # <-
     if(data[0].token.idEqual(Ids.ATT_ID)): # Verifica Atribuição
-        data = ATT_func(data)
+        data, tmp = ATT_func(data, tmp)
     # ()
     elif(data[0].token.idEqual(Ids.O_PARENTHESIS)):
-        data = O_PARENTHESIS_func(data)
+        data, tmp = O_PARENTHESIS_func(data, tmp)
+   
+    if(tmp.children == None):
+        tmp.addChild()
     
     # sozinho "ID" --> não faz nada
+    myTree.addChild(tmp)
+    return data, myTree
 
-    return data
-
-def IF_func(data):
+def IF_func(data, myTree: st.Node):
     """
     SOBRE
     -------------
     Função para tratar expressão IF. Ao longo da estrutura IF há expressões.
-
     IF expr THEN expr ELSE expr FI
-
     PARÂMETROS
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
-
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
     
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
     Lembrando que é possível que alguma expressão
     com recursão a esquerda seja chamada em algum 
     momento (expr + expr, por exemplo) que será tratada
     pela função expr_line
-    Na estrutura da ÁRVORE SINTÁTICA, uma expressão IF gera
+    Na estrutura da árvore semântica, uma expressão IF gera
                         (IF)           1 raiz
-                    /    |     \\\\
+                    /    |     \\
                 expr1  expr2  expr3    3 filhos
     """
+    # cria raiz do tipo IF
+    tmp = st.Node()
+    tmp.setLabel(st.tag.IF)
+    tmp.setName(data[0].token.token)
+    tmp.setLine(data[0].token.line)
+
     # consome token lido
     data[0].nexToken(data[0].situation)
-    if(data[0].situation == PC.SIG.EndOfProgram): return data
+    if(data[0].situation == PC.SIG.EndOfProgram): return data, myTree
 
-    # cria raiz do tipo IF
-    tempNode = ST.If()
-    
     # cria filho 1
-    data = expr(data) # chama expressão
-    child = [data[2]] # possível volta de expressão
-
-    data = expr_line(data) # recursão à esquerda
-    if(data[2]!=[]):
-        child.append(data[2]) # possível volta de expressão
-
-    data[2] = tempNode.addChild(child) # vira o novo dado temporário que seria o retorno para o pai dele
+    data, tmp = expr(data, tmp) # chama expressão
+    data, tmp = expr_line(data, tmp) # recursão à esquerda
 
     # Verifica Then
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'then' was expected after the 1° 'if' condition",
     Ids.THEN_ID, data)
-    if(data[0].situation == PC.SIG.EndOfProgram): return data
+    if(data[0].situation == PC.SIG.EndOfProgram): return data, myTree
 
     # cria filho 2
-    data = expr(data) # chama expressão
-    child = [data[2]] # possível volta de expressão
-
-    data = expr_line(data) # recursão à esquerda
-    if(data[2]!=[]):
-        child.append(data[2]) # possível volta de expressão
-    
-    data[2] = tempNode.addChild(child) # vira o novo dado temporário que seria o retorno para o pai dele
+    data, tmp = expr(data, tmp) # chama expressão
+    data, tmp = expr_line(data, tmp) # recursão à esquerda
 
     # Verifica ELSE
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'else' was expected in 'if' structure",
     Ids.ELSE_ID, data)
-    if(data[0].situation == PC.SIG.EndOfProgram): return data
+    if(data[0].situation == PC.SIG.EndOfProgram): return data, myTree
 
     # cria filho 3
-    data = expr(data) # chama expressão
-    child = [data[2]] # possível volta de expressão
-
-    data = expr_line(data) # recursão à esquerda
-    if(data[2]!=[]):
-        child.append(data[2]) # possível volta de expressão
-    
-    data[2] = tempNode.addChild(child) # vira o novo dado temporário que seria o retorno para o pai dele
+    data, tmp = expr(data, tmp) # chama expressão
+    data, tmp = expr_line(data, tmp) # recursão à esquerda
 
     # Verifica Fi
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'fi' was expected to close 'if' structure",
     Ids.FI_ID, data)
-    if(data[0].situation == PC.SIG.EndOfProgram): return data
+    if(data[0].situation == PC.SIG.EndOfProgram): return data, myTree
 
-    return data
+    myTree.addChild(tmp)
+    return data, myTree
 
-def WHILE_func(data):
+def WHILE_func(data, myTree: st.Node):
     """
     SOBRE
     -------------
     Função para tratar expressão WHILE
     Ao longo da estrutura WHILE há expressões
-
     WHILE expr LOOP expr POOL
-
     
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
-
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
     
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
     Lembrando que é possível que alguma expressão
         com recursão a esquerda seja chamada em algum 
         momento (expr + expr, por exemplo) que será tratada
         pela função expr_line
         
-        - Na estrutura da ÁRVORE SINTÁTICA, uma expressão IF gera
+        - Na estrutura da árvore semântica, uma expressão IF gera
                     (WHILE)     1 raiz
                     /    \\
                 expr1  expr2    2 filhos
     
     """
+    # cria raiz do tipo WHILE
+    tmp = st.Node()
+    tmp.setLabel(st.tag.WHILE)
+    tmp.setName(data[0].token.token)
+    tmp.setType("None")
+
     # consome token lido
     data[0].nexToken(data[0].situation)
-    if(data[0].situation == PC.SIG.EndOfProgram): return data
+    if(data[0].situation == PC.SIG.EndOfProgram): return data, myTree
     
-    # cria raiz do tipo WHILE
-    tempNode = ST.While()
-    
-    # cria filho 1    
-    data = expr(data) # chama expressão
-    child = [data[2]]
+    # cria filho 1
+    data, tmp = expr(data, tmp) # chama expressão
+    data, tmp = expr_line(data, tmp) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
 
-    data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
-    if(data[2]!=[]):
-        child.append(data[2]) # possível volta de expressão
     # Verificar Loop
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'loop' expected after 'while' structure condition",
     Ids.LOOP_ID, data)
-    if(data[0].situation == PC.SIG.EndOfProgram): return data
+    if(data[0].situation == PC.SIG.EndOfProgram): return data, myTree
 
     # cria filho 2
         
-    data = expr(data) # chama expressão
-    child = [data[2]]
+    data, tmp = expr(data, tmp) # chama expressão
+    data, tmp = expr_line(data, tmp) # recursão à esquerda
 
-    data = expr_line(data) # recursão à esquerda
-    if(data[2]!=[]):
-        child.append(data[2]) # possível volta de expressão
-    
-    data[2] = tempNode.addChild(child) # vira o novo dado temporário que seria o retorno para o pai dele
-   
     # Verificar Pool
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'pool' was expected to close 'while' structure",
     Ids.POOL_ID, data)
-    if(data[0].situation == PC.SIG.EndOfProgram): return data
+    if(data[0].situation == PC.SIG.EndOfProgram): return data, myTree
 
-    return data
+    myTree.addChild(tmp)
+    return data, myTree
 
-def LET_func(data):
+# NÃO SEI O QUE FAZER COM O LETTTT
+def LET_func(data, myTree: st.Node):
     """
     SOBRE
     -------------
     Função para tratar expressão LET
-
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
-
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
-
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
-    Na estrutura da ÁRVORE SINTÁTICA, uma expressão LET gera
+    Na estrutura da árvore semântica, uma expressão LET gera
                     (LET)     1 raiz
                       |
                   ID&TYPE1*   1 ou mais filhos
@@ -262,12 +239,21 @@ def LET_func(data):
                      expr     1 filho
     Observe que as informações de ID, TYPE devem ser guardados porque serão úteis na análise semântica
     """
+    # Cria raíz
+    tmp = st.Node()
+    tmp.setLabel(st.tag.LET)
+    tmp.setName(data[0].token.token)
+    tmp.setLine(data[0].token.line)
     
     data[0].nexToken(data[0].situation)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
     
     while True:
         # criar filho n
+        aux = st.Node()
+        aux.setLabel(st.tag.LETOPT)
+        aux.setName(data[0].token.token)
+        aux.setLine(data[0].token.line)
 
         # Verifica ID (info do nó)
         data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: ID expected on 'let' structure",
@@ -279,6 +265,7 @@ def LET_func(data):
         Ids.COLON_ID, data)
         if(data[0].situation == PC.SIG.EndOfProgram): return data
 
+        aux.setType(data[0].token.token)
         # verificar TYPE (info do nó)
         data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: TYPE expected on 'let' structure",
         Ids.TYPE_ID, data)
@@ -287,10 +274,11 @@ def LET_func(data):
             data[0].nexToken(data[0].situation)
             if(data[0].situation == PC.SIG.EndOfProgram): return
         
-            data = expr(data) # chama expressão
+            data, aux = expr(data, aux) # chama expressão
 
-            data = expr_line(data) # recursão à esquerda
+            data, aux = expr_line(data, aux) # recursão à esquerda
 
+        tmp.addChild(aux)
         if(not data[0].token.idEqual(Ids.COMMA_ID)): # verificar se terá outro ID:TYPE
             break
         
@@ -305,13 +293,15 @@ def LET_func(data):
     Ids.IN_ID, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
     
-    data = expr(data) # chama expressão
+    data, tmp = expr(data, tmp) # chama expressão
 
-    data = expr_line(data) # recursão à esquerda
+    data, tmp = expr_line(data, tmp) # recursão à esquerda
 
-    return data
+    myTree.addChild(tmp)
 
-def CASE_func(data):
+    return data, myTree
+
+def CASE_func(data, myTree: st.Node):
     """
     SOBRE
     -------------
@@ -319,15 +309,13 @@ def CASE_func(data):
     
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
-
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
-
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
-    Na estrutura da ÁRVORE SINTÁTICA, uma expressão CASE gera
+    Na estrutura da árvore semântica, uma expressão CASE gera
                 (CASE)        1 raiz
                 /    \\
             expr1  ID&TYPE    2 filhos
@@ -335,16 +323,18 @@ def CASE_func(data):
                         expr
     Observe que as informações de ID, TYPE devem ser guardados porque serão úteis na análise semântica
     """
+    # criar raíz
+    tmp = st.Node()
+    tmp.setLabel(st.tag.CASE)
+    tmp.setName(data[0].token.token)
 
     # Consome token lido
     data[0].nexToken(data[0].situation)
-    if(data[0].situation == PC.SIG.EndOfProgram): return data
+    if(data[0].situation == PC.SIG.EndOfProgram): return data, myTree
     
     # cria filho 1
-        
-    data = expr(data) # chama expressão
-
-    data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+    data, tmp = expr(data, tmp) # chama expressão
+    data, tmp = expr_line(data, tmp) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
 
     # Verifica Of
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'of' expected on case statement",
@@ -358,6 +348,10 @@ def CASE_func(data):
     # Considerando que o filho 1 já exista
     while(data[0].token.idEqual(Ids.ID_ID)):
         # cria filho n + 1
+        aux = st.Node()
+        aux.setLabel(st.tag.CASEOPT)
+        aux.setName(data[0].token.token)
+        aux.setLine(data[0].token.line)
 
         data[0].nexToken(data[0].situation) # consome ID (filho)
 
@@ -367,6 +361,7 @@ def CASE_func(data):
         data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:" + "':' missing in  'case' structure", Ids.COLON_ID, data)
         if(data[0].situation == PC.SIG.EndOfProgram): return data
         
+        aux.setType(data[0].token.token)
         # verifica TYPE (filho)
         data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:" + "TYPE missing in  'case' structure", Ids.TYPE_ID, data)
         if(data[0].situation == PC.SIG.EndOfProgram): return data
@@ -377,210 +372,239 @@ def CASE_func(data):
         
         # cria filho n+2
         
-        data = expr(data) # chama expressão
+        data, aux = expr(data, aux) # chama expressão
 
-        data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+        data, aux = expr_line(data, aux) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
 
         # ;
         data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:" + "';' missing in  'case' structure", Ids.SEMICOLON_ID, data)
+        
+        tmp.addChild(aux)
+        
         if(data[0].situation == PC.SIG.EndOfProgram): return data
+
         
     # Verifica esac
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:  'esac' was expected to close CASE structure",
     Ids.ESAC_ID, data) 
     if(data[0].situation == PC.SIG.EndOfProgram): return data
     
-    return data
+    myTree.addChild(tmp)
 
-def NEW_func(data):
+    return data, myTree
+
+def NEW_func(data, myTree: st.Node):
     """
     SOBRE
     -------------
     Função para tratar expressão NEW.
-
     NEW type
-
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
-
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
     
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
-    Na estrutura da ÁRVORE SINTÁTICA, uma expressão CASE gera
-                    (NEW)   1 raiz
-                      |
-                    TYPE    1 filho
+    Na estrutura da árvore semântica, uma expressão CASE gera
+                    (NEW) --- TYPE    
     """
     # cria raiz
-        
+    
+    tmp = st.Node()
+    tmp.setLabel(st.tag.NEW)
+    tmp.setName(data[0].token.token)
+    tmp.setLine(data[0].token.line)
+    tmp.addChild("NULL")
+
     # Consumir token lido
     data[0].nexToken(PC.SIG.TokenFound)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
     
-    # cria filho
-        
-    # checar TYPE (filho)
+    tmp.setType(data[0].token.token)
+    # checar TYPE
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: TYPE was expected after new",
     Ids.TYPE_ID, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
-    return data
+    myTree.addChild(tmp)
+    return data, myTree
 
-def ISVOID_func(data):
+def ISVOID_func(data, myTree: st.Node):
     """
     SOBRE
     -------------
     Função para tratar expressão ISVOID. Trata-se de uma expressão com recusão a direita.
-
     ISVOID --> expr
-
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
-
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
     
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
-    Na estrutura da ÁRVORE SINTÁTICA, uma expressão ISVOID gera
+    Na estrutura da árvore semântica, uma expressão ISVOID gera
                   (ISVOID)   1 raiz
                       |
                      expr    1 filho
     """
     # cria raiz
+    tmp = st.Node()
+    tmp.setLabel(st.tag.ISVOID)
+    tmp.setName(data[0].token.token)
+    tmp.setType(data[0].token.token)
+    tmp.setLine(data[0].token.line)
+
     data[0].nexToken(PC.SIG.TokenFound)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
         
     # cria filho 1
-        
-    data = expr(data) # chama expressão
+    data, tmp = expr(data, tmp) # chama expressão
 
-    data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+    data, tmp = expr_line(data, tmp) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
 
-    return data
+    myTree.addChild(tmp)
 
-def NOT_func(data):
+    return data, myTree
+
+def NOT_func(data, myTree: st.Node):
     """
     SOBRE
     -------------
     Função para tratar expressão NOT. Trata-se de uma expressão com recusão a direita.
-
     NOT --> expr
     
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
-
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
     
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
-    Na estrutura da ÁRVORE SINTÁTICA, uma expressão NOT gera
+    Na estrutura da árvore semântica, uma expressão NOT gera
                     (NOT)   1 raiz
                       |
                      expr   1 filho
     """
     # cria raiz
+    tmp = st.Node()
+    tmp.setLabel(st.tag.NOT)
+    tmp.setName(data[0].token.token)
+    tmp.setType(data[0].token.token)
+    tmp.setLine(data[0].token.line)
+
     data[0].nexToken(PC.SIG.TokenFound)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
         
     # cria filho 1
-        
-    data = expr(data) # chama expressão
+    data, tmp = expr(data, tmp) # chama expressão
 
-    data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+    data, tmp = expr_line(data, tmp) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
 
-    return data
+    myTree.addChild(tmp)
 
-def TIDE_func(data):
+    return data, myTree
+
+def TIDE_func(data, myTree: st.Node):
     """
     SOBRE
     -------------
     Função para tratar expressão TIDE. Trata-se de uma expressão com recusão a direita.
-
     TIDE --> expr
     
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
-
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
     
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
-    Na estrutura da ÁRVORE SINTÁTICA, uma expressão TIDE gera
+    Na estrutura da árvore semântica, uma expressão TIDE gera
                     (TIDE)   1 raiz
                       |
                      expr   1 filho
     """
     # cria raiz
+    tmp = st.Node()
+    tmp.setLabel(st.tag.TIDE)
+    tmp.setName(data[0].token.token)
+    tmp.setType(data[0].token.token)
+    tmp.setLine(data[0].token.line)
+
     data[0].nexToken(PC.SIG.TokenFound)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
         
     # cria filho 1
-        
-    data = expr(data) # chama expressão
+    data, tmp = expr(data, tmp) # chama expressão
+    data, tmp = expr_line(data, tmp) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
 
-    data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+    myTree.addChild(tmp)
+    return data, myTree
 
-    return data
-
-def O_PARENTHESIS_func(data):
+def O_PARENTHESIS_func(data, myTree: st.Node):
     """
     SOBRE
     -------------
     Função para tratar expressão (expr).
     Trata-se de uma expressão com recusão a direita
-
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
-
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
     
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
-    Na estrutura da ÁRVORE SINTÁTICA, uma expressão (expr) gera
+    Na estrutura da árvore semântica, uma expressão (expr) gera
                     ('(')   1 raiz
                       |
                      expr   1 filho
     """
-     # cria raiz
-        
+    # cria raiz
+    tmp = st.Node()
+    tmp.setLabel(st.tag.PARENTHESIS)
+    tmp.setLine(data[0].token.line)
+    tmp.setName(data[0].token.token)
+
     # Consumir token lido
     data[0].nexToken(PC.SIG.TokenFound)
-    if(data[0].situation == PC.SIG.EndOfProgram): return data
+    if(data[0].situation == PC.SIG.EndOfProgram): 
+        myTree.addChild(tmp)
+        return data, myTree
     
      # cria filho 1
     while True:    
-        data = expr(data) # chama expressão
-
-        data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+        data, tmp = expr(data, tmp) # chama expressão
+        data, tmp = expr_line(data, tmp) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
 
         if(not data[0].token.idEqual(Ids.COMMA_ID)):
             break
-                
+        
         data[0].nexToken(PC.SIG.TokenFound)
-        if(data[0].situation == PC.SIG.EndOfProgram): return data
+        myTree.addChild(tmp)
+        if(data[0].situation == PC.SIG.EndOfProgram): 
+            return data, myTree
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: ')' was expected to close '(expr)' structure",
     Ids.C_PARENTHESIS, data)# Verifica )
-    if(data[0].situation == PC.SIG.EndOfProgram): return data
+    if(data[0].situation == PC.SIG.EndOfProgram): # DEsnecess[ario (?)]
+        myTree.addChild(tmp)
+        return data, myTree
 
-    return data
+    if(tmp.children == None):
+        tmp.addChild()
+    myTree.addChild(tmp)
+    return data, myTree
 
-def O_BRACKETS_func(data):
+def O_BRACKETS_func(data, myTree: st.Node):
     """
     SOBRE
     -------------
@@ -589,21 +613,26 @@ def O_BRACKETS_func(data):
     
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
-
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
     
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
-    Na estrutura da ÁRVORE SINTÁTICA, uma expressão {[[expr;]]^+} gera
+    Na estrutura da árvore semântica, uma expressão {[[expr;]]^+} gera
                     ('{')   1 raiz
                       |
                      expr   1 ou mais filhos
     """
     # cria raiz
-        
+    tmp = st.Node()
+    tmp.setLabel(st.tag.BRACKETS)
+    tmp.setName(data[0].token.token)
+    tmp.setType(data[0].token.token)
+    tmp.setLine(data[0].token.line)
+
+
     # Consumir token lido
     data[0].nexToken(PC.SIG.TokenFound)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
@@ -613,13 +642,13 @@ def O_BRACKETS_func(data):
     # Já se espera que seja uma expressão a seguir
     while True:
         # cria Nnésimo filho 
-        data = expr(data) # chama expressão
-
-        data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+        data, tmp = expr(data, tmp) # chama expressão
+        data, tmp = expr_line(data, tmp) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
 
         data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: ';' expected in multiple expression statement", Ids.SEMICOLON_ID, data)
         if(data[0].situation == PC.SIG.EndOfProgram): return data
 
+        # tmp.addChild(aux)
         # Se encontroou } então significa que não terá mais chamada de expr
         if(data[0].token.idEqual(Ids.C_BRACKETS)): 
             break
@@ -629,9 +658,11 @@ def O_BRACKETS_func(data):
         
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
-    return data
+    myTree.addChild(tmp)
 
-def DOT_func(data):
+    return data, myTree
+
+def DOT_func(data, myTree: st.Node):
     """
     SOBRE
     -------------
@@ -641,68 +672,70 @@ def DOT_func(data):
     
     PARÂMETROS
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
-
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
     
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
-    Na estrutura da ÁRVORE SINTÁTICA, .ID gera
+    Na estrutura da árvore semântica, .ID gera
                     (DOT)   1 raiz
                       |
                       ID   1 ou mais filhos
     """
 
     # cria raiz
-        
+    tmp = st.Node()
+    tmp.setLabel(st.tag.DOT)
+    tmp.setName(data[0].token.token)
+    tmp.setType(data[0].token.token)
+    tmp.setLine(data[0].token.line)
+
     # Consumir token lido
     data[0].nexToken(PC.SIG.TokenFound)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
-    # cria filho (ID)
         
-    data = expr(data) # chama expressão
+    data, tmp = expr(data,tmp) # chama expressão
 
-    data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+    data, tmp = expr_line(data, tmp) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
 
-    return data
+    myTree.addChild(tmp)
 
-def AT_func(data):
+    return data, myTree
+
+def AT_func(data, myTree: st.Node):
     """
     SOBRE
     -------------
     Função para tratar expressão @TYPE.ID
     Trata-se de uma parte de uma expressão com recusão a esquerda
     de chamada de método.
-
     PARÂMETROS
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
-
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
     
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
-    Na estrutura da ÁRVORE SINTÁTICA, .ID gera
-                    (AT)   1 raiz
-                      |
-                    TYPE*   1 ou mais filhos
-                      |
-                      ID*   1 ou mais filhos
+    Na estrutura da árvore semântica, .ID gera
+                    (AT) --TYPE* -- ID*   1 ou mais filhos
         * une em um nó só? Não, pois ID terá outros filhos
     """
     # cria raiz
-        
+    tmp = st.Node()
+    tmp.setLabel(st.tag.FUNCALL)
+    tmp.setLine(data[0].token.line)
+
     # Consumir token lido
     data[0].nexToken(PC.SIG.TokenFound)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
-    # cria filho 1
-
+    tmp.setName(data[0].token.token)
+    tmp.setType(data[0].token.token)
     # verificar TYPE
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: TYPE expected in expression expr[@TYPE]...",
     Ids.TYPE_ID, data)
@@ -720,30 +753,30 @@ def AT_func(data):
         # retornar ao anterior para poder dar next 
         # na função DOT_func(data) sem afetar o programa
         
-    data = DOT_func(data) # passar o trabalho para outra função que irá fazer a mesma coisa
-    return data
+    data, tmp = DOT_func(data, tmp) # passar o trabalho para outra função que irá fazer a mesma coisa
+    
+    myTree.addChild(tmp)
+    return data, myTree
 
-def OPs_func(data):
+def OPs_func(data, myTree: st.Node):
     """
     SOBRE
     -------------
     
-    Função para tratar expressão @TYPE.ID
+    Função para tratar expressão expr OP expr
     Trata-se de uma parte de uma expressão com recusão a esquerda
     de chamada de método.
-
     
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
-
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
     
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
-    Na estrutura da ÁRVORE SINTÁTICA, operadores lógicos e aritiméticos geram
+    Na estrutura da árvore semântica, operadores lógicos e aritiméticos geram
                 <exp>   (estrutura de recursão anterior)
                      \\
                      (OP)   1 raiz
@@ -751,59 +784,68 @@ def OPs_func(data):
                      expr   1 filho
     """
     # cria raiz
+    tmp = st.Node()
+    tmp.setName(data[0].token.token)
+    tmp.setType(data[0].token.token)
+    tmp.setLine(data[0].token.line)
+    tmp.setLabel(st.tag.OPE)
+
     # Consumir token lido
     data[0].nexToken(PC.SIG.TokenFound)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
     
     # cria Nnésimo filho 
     
-    data = expr(data) # chama expressão
+    data, tmp = expr(data, tmp) # chama expressão
 
-    data = expr_line(data) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+    data, tmp = expr_line(data, tmp) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
 
-    return  data
+    myTree.addChild(tmp)
 
-def expr_line(data):
+    return  data, myTree
+
+def expr_line(data, myTree: st.Node):
     """
     SOBRE
     -------------
     Função que trata recursão à esquerda presente em algumas expressões da linguagem Cool.
     Um exemplo disso é a estrutura:
                   expr + expr
-
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
-
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
+    - data  : lista que contém classe de manipulação de tokens, lista de tipos 
+    - mytree: árvore semântica modificados
 
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
     """
-    tempNode = []
+    tmp = st.Node()
+    tmp.setLabel(st.tag.EXPRL)
+    foundexpl = False
     while True:
         # modificados para remover recursão a esquerda # +, -, *, /, <, <=, =
         if(data[0].token.idEqual(Ids.PLUS_ID) or data[0].token.idEqual(Ids.MINUS_ID) or data[0].token.idEqual(Ids.ASTERISK_ID) or data[0].token.idEqual(Ids.F_SLASH_ID) or data[0].token.idEqual(Ids.LESS_THAN_ID) or data[0].token.idEqual(Ids.LESS_THAN_EQUAL_TO_ID) or data[0].token.idEqual(Ids.EQUAL_TO_ID)):
-            data = OPs_func(data)
-            tempNode.append(data[2])
+            foundexpl = True
+            data, tmp = OPs_func(data, tmp)
         elif(data[0].token.idEqual(Ids.AT_ID)): # concerteza ao ter um @ terá de ter TYPE.ID depois
-            data = AT_func(data)
-            tempNode.append(data[2])
+            foundexpl = True
+            data, tmp = AT_func(data, tmp)
         elif(data[0].token.idEqual(Ids.DOT_ID)): # concerteza ao ter um . terá de ter ID depois
-            data = DOT_func(data)
-            tempNode.append(data[2])
-        else: break
-    data = expr(data)
-    tempNode.append(data[2])
-    
-    data[2] = None # forçar "limpeza"
-    data[2] = tempNode
+            foundexpl = True
+            data, tmp = DOT_func(data, tmp)
+        else:
+            break
 
-    return data  
-        
-def expr(data):
+    if(foundexpl):
+        data, tmp =  expr(data, tmp)
+        myTree.addChild(tmp)
+
+    return data, myTree
+       
+def expr(data, myTree: st.Node):
     """
     SOBRE
     -------------
@@ -811,61 +853,70 @@ def expr(data):
     Basicamente a estrutura é dividida em busca por expressões atômicas e não atômicas.
     
     - Expressões Atômicas: são simples, são símbolos terminais da gramática
-
     - Expressões Não Atômicas: são expressões que possuem símbolos não teminais(pensando na notação de gramática)
         - Tratadas dentro de suas respectivas funções 
         - Em cada uma, é possível que alguma expressão com recursão a esquerda seja chamada em algum 
     momento (expr + expr, por exemplo) que será tratada pela função expr_line
-
     PARÂMETROS
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
-
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    - myTree: retorna estrutura da árvore recebida modificad/atualizada
    
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
-    A formação da ÁRVORE SINTÁTICA é tratada separadamente para cada tipo de expressão identificada em Cool.
+    A formação da árvore semântica é tratada separadamente para cada tipo de expressão identificada em Cool.
     Isso quer dizer que, em cada função destinada a cada um dos grupos de expressões dispostos abaixo, com 
     exceção de expressões atômicas as quais serão tratadas diretamente na chamada de expr(), haverá a adição
     de nós segundo a regra sintática de cada expressão.
-
     Pensar ainda em como vai ocorrer a ligação dos símbolos terminais
         - depende do nó anterior de um outro contexto?
         - em qual nó irei ligar?
     """
     # Terminais
     if(data[0].token.idEqual(Ids.INTEGER_ID) or data[0].token.idEqual(Ids.STRING_ID) or data[0].token.idEqual(Ids.TRUE_ID) or data[0].token.idEqual(Ids.FALSE_ID)):
+        tmp = st.Node()
+        tmp.setLine(data[0].token.line)
+        tmp.setName(data[0].token.token)
+        tmp.setType(data[0].token.id)
+        tmp.addChild()
+        tmp.setLabel(str(data[0].token.id)[4:-3:])
+
         data[0].nexToken(PC.SIG.TokenFound)
-        if(data[0].situation == PC.SIG.EndOfProgram): return data
+
+        myTree.addChild(tmp)
+
+        if(data[0].situation == PC.SIG.EndOfProgram): return data, myTree # desnecessário(ver)
+        return data, myTree
 
     # Recursões a direita
-    if(data[0].token.idEqual(Ids.ID_ID)):  
-        data = ID_func(data) #ID
-
-    if(data[0].token.idEqual(Ids.IF_ID)):  data = IF_func(data) #IF
     
-    if(data[0].token.idEqual(Ids.WHILE_ID)): data = WHILE_func(data) #WHILE
+    if(data[0].token.idEqual(Ids.ID_ID)):  data, myTree = ID_func(data, myTree) #ID
     
-    if(data[0].token.idEqual(Ids.LET_ID)): data = LET_func(data) #LET
+    if(data[0].token.idEqual(Ids.IF_ID)):  data, myTree = IF_func(data, myTree) #IF
     
-    if(data[0].token.idEqual(Ids.CASE_ID)): data = CASE_func(data) #CASE
+    if(data[0].token.idEqual(Ids.WHILE_ID)): data, myTree= WHILE_func(data, myTree) #WHILE
     
-    if(data[0].token.idEqual(Ids.NEW_ID)): data = NEW_func(data) #NEW
+    if(data[0].token.idEqual(Ids.LET_ID)): data, myTree = LET_func(data, myTree) #LET
     
-    if(data[0].token.idEqual(Ids.ISVOID_ID)): data = ISVOID_func(data) #ISVOID
+    if(data[0].token.idEqual(Ids.CASE_ID)): data, myTree = CASE_func(data, myTree) #CASE
     
-    if(data[0].token.idEqual(Ids.NOT_ID)): data = NOT_func(data) #NOT
+    if(data[0].token.idEqual(Ids.NEW_ID)): data, myTree = NEW_func(data, myTree) #NEW
+    
+    if(data[0].token.idEqual(Ids.ISVOID_ID)): data, myTree = ISVOID_func(data, myTree) #ISVOID
+    
+    if(data[0].token.idEqual(Ids.NOT_ID)): data, myTree = NOT_func(data, myTree) #NOT
         
-    if(data[0].token.idEqual(Ids.TIDE_ID)): data = TIDE_func(data) #NOT
+    if(data[0].token.idEqual(Ids.TIDE_ID)): data, myTree = TIDE_func(data, myTree) #NOT
     
-    if(data[0].token.idEqual(Ids.O_PARENTHESIS)): data = O_PARENTHESIS_func(data) #(
-    
-    if(data[0].token.idEqual(Ids.O_BRACKETS)): data = O_BRACKETS_func(data)  #{
+    if(data[0].token.idEqual(Ids.O_PARENTHESIS)): 
+        data, myTree = O_PARENTHESIS_func(data, myTree) #(
 
-    return data
+    if(data[0].token.idEqual(Ids.O_BRACKETS)): data, myTree = O_BRACKETS_func(data, myTree)  #{
+
+    return data, myTree
 
 def checkToken_N_reportSyntError(errSTR, ID_comp, data, isFormal = False):
     """
@@ -877,7 +928,6 @@ def checkToken_N_reportSyntError(errSTR, ID_comp, data, isFormal = False):
     o próximo token após T é E. Se for, será considerado consumido
     como se o erro sintático não ocorreu. Porém a mensagem de erro
     ainda aparecerá ao usuário após a análise.
-
     PARÂMETROS
     ----------------
     errSTR : mensagem de erro referente a regra que a falta do E inflingiu
@@ -885,9 +935,8 @@ def checkToken_N_reportSyntError(errSTR, ID_comp, data, isFormal = False):
     
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
-
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
     """
     typeOrName = ""
@@ -909,7 +958,7 @@ def checkToken_N_reportSyntError(errSTR, ID_comp, data, isFormal = False):
         
     return data, typeOrName
 
-def ATTRIBUTE_func(data,_AttName):
+def ATTRIBUTE_func(data, myTree: st.Node):
     """
     SOBRE
     ----------
@@ -918,27 +967,34 @@ def ATTRIBUTE_func(data,_AttName):
     
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
     
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
-
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
     """
+    myTree.setLabel(st.tag.ATTRIBUTE)
+
+    _AttName = data[2]
+    
+    myTree.setType(data[0].token.token)
+
     # verificar TYPE
     data, attType = checkToken_N_reportSyntError(f"line {data[0].token.line}: " + "No attribute Type declared",
     Ids.TYPE_ID, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
+
     # verificar se há atribuição de valor junto da declaração de um atributo
     if(data[0].token.idEqual(Ids.ATT_ID)):
         data[0].nexToken(data[0].situation)
         if(data[0].situation == PC.SIG.EndOfProgram): return
-        data = expr(data)
+        data, myTree = expr(data, myTree)
+
     data[1][1].newAttribute(_AttName,attType)
-    return data
+    return data, myTree
 
 def formal(data):
     """
@@ -948,16 +1004,16 @@ def formal(data):
     
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
     
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
-
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
     """
     _listOfFormals = []
+
     while True:
         # Verifica ID
         data, _nameOfFormal = checkToken_N_reportSyntError(f"line {data[0].token.line}: ID not founded. Formal expected",
@@ -981,7 +1037,7 @@ def formal(data):
         if(data[0].situation == PC.SIG.EndOfProgram): return data
     return data, _listOfFormals
     
-def METHOD_func(data, _Methodname):
+def METHOD_func(data, myTree:st.Node):
     """
     SOBRE
     --------
@@ -989,23 +1045,29 @@ def METHOD_func(data, _Methodname):
     
     PARÂMETROS
     -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
+    data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
     
     RETORNO
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
-
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
+    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
+    FORMAÇÃO DA ÁRVORE SEMÂNTICA
     ----------------------------
     """
+    _Methodname = data[2]
     _typeOfReturn = ""
     _listOfFormals = []
+
+    myTree.setLabel(st.tag.METHOD) # informa que é um nó do tipo Método
+
     if(data[0].token.idEqual(Ids.C_PARENTHESIS)):
         data[0].nexToken(data[0].situation) # pula o { encontrado extra pois terá mais de uma expressão
         if(data[0].situation == PC.SIG.EndOfProgram): return data 
     else:
         # verifica formal obrigatório
-        data, _listOfFormals  = formal(data)
+        data, _listOfFormals  = formal(data) # N'ao precisa de n[os contendo formals já que temos lista de tipos
+        
+        myTree.addChild(_listOfFormals,True) # adiciona a lista não como filho (serão somente as expressões)
+
         if(data[0].situation == PC.SIG.EndOfProgram): return data
 
         # verifica )
@@ -1023,6 +1085,8 @@ def METHOD_func(data, _Methodname):
     Ids.TYPE_ID, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
+    myTree.setType(_typeOfReturn)
+    
     # verifica {
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: {'{'} expected",
     Ids.O_BRACKETS, data)
@@ -1031,11 +1095,8 @@ def METHOD_func(data, _Methodname):
     # ANT:  verifica se tem { extra
     # RESP: não precisa, já tem uma expressão do tipo {expr;^+}
 
-    '''
-    Trecho a adicionar as expressões aos métodos
-    '''
-    data = expr(data)
-    data = expr_line(data)
+    data, myTree = expr(data, myTree)
+    data, myTree = expr_line(data, myTree)
 
     # } fechar method
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: {'}'} expected to close methods",
@@ -1044,107 +1105,91 @@ def METHOD_func(data, _Methodname):
 
     data[1][1].newMethod(_Methodname, _typeOfReturn, _listOfFormals)
 
-    return data
+    return data, myTree
 
-def FEATURE_func(data):    
+def FEATURE_func(data):
     """
-    SOBRE
-    --------
-    Função que verifica a estrutura de uma feature de uma classe em Cool
-    
-    PARÂMETROS
-    -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
-    
-    RETORNO
-    -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
+    Para a árvore sintática retorna uma criança
+    """
 
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
-    ----------------------------
-    
-    """
+    tmp = st.Node() # nó temporário
+
     _name =  ""
+    tmp.setLine(data[0].token.line)
     # Verifica ID
     data, _name = checkToken_N_reportSyntError(f"line {data[0].token.line}: ID was expected to initialize a feature",
     Ids.ID_ID, data)
-    if(data[0].situation == PC.SIG.EndOfProgram): return data
+    if(data[0].situation == PC.SIG.EndOfProgram): return data, tmp
+    data[2] = _name
 
+    tmp.setName(_name)
     if(data[0].token.idEqual(Ids.O_PARENTHESIS)):
         data[0].nexToken(data[0].situation)
-        if(data[0].situation == PC.SIG.EndOfProgram): return data
-        data =  METHOD_func(data,_name)
-        return data
+        if(data[0].situation == PC.SIG.EndOfProgram): return data, tmp
+        data, tmp =  METHOD_func(data, tmp)
+        return data, tmp
     else:
         # segunda chance só se o token analisado não for :
         if(not data[0].token.idEqual(Ids.COLON_ID) and data[0].afToken().idEqual(Ids.O_PARENTHESIS)):
             data[0].nexToken(PC.SIG.TokenFound)
-            if(data[0].situation == PC.SIG.EndOfProgram): return data
-            data = METHOD_func(data, _name)
+            if(data[0].situation == PC.SIG.EndOfProgram): return data, tmp
+            data, tmp = METHOD_func(data, tmp)
         else:
             if(data[0].token.idEqual(Ids.COLON_ID)): # verifica :
                 data[0].nexToken(PC.SIG.TokenFound)
-                if(data[0].situation == PC.SIG.EndOfProgram): return data
-                data = ATTRIBUTE_func(data,_name)
+                if(data[0].situation == PC.SIG.EndOfProgram): return data, tmp
+                data, tmp = ATTRIBUTE_func(data, tmp)
             elif(data[0].afToken().idEqual(Ids.COLON_ID)): # se o próximo for :
                 data[0].nexToken(PC.SIG.TokenFound)
-                if(data[0].situation == PC.SIG.EndOfProgram): return data
-                data = ATTRIBUTE_func(data, _name)
+                if(data[0].situation == PC.SIG.EndOfProgram): return data, tmp
+                data, tmp = ATTRIBUTE_func(data, tmp)
             else:
                 data[0].nexToken(PC.SIG.TokenFound)
-                if(data[0].situation == PC.SIG.EndOfProgram): return data
+                if(data[0].situation == PC.SIG.EndOfProgram): return data, tmp
 
                 data[0].setPs_err(f"line {data[0].token.line}: '('(method) or ':'(attribute) expected")
                 data[0].addError()
 
-        return data
-
+        return data, tmp # retorna filho da função
+        
 def CLASS_func (data): 
-    """
-    SOBRE
-    --------
-    Função que verifica a estrutura de uma classe em Cool
-    
-    PARÂMETROS
-    -------------
-    data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA
-    
-    RETORNO
-    -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e ÁRVORE SINTÁTICA modificados
-
-    FORMAÇÃO DA ÁRVORE SINTÁTICA
-    ----------------------------   
-    Na estrutura da ÁRVORE SINTÁTICA, uma classe gera
-                    (CLASS)   1 raiz
-                       |
-                    FEATURE   1 ou mais filhos
-    
-    """
     _className, _typeInherits = "" ,""
+
+    # cria raiz    
+    tmp = st.Node()
+
     # Verifica class
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:" + "Must be a class declaration",
     Ids.CLASS_ID, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
     
+    # add nome e linha da classe declarada
+    tmp.setName(data[0].token.token)
+    tmp.setLine(data[0].token.line)
+    tmp.setLabel(st.tag.CLASS)
     # Verifica TYPE
     data, _className = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'class' must be followed by a TYPE",
     Ids.TYPE_ID, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
-
+    
     # Verifica inherits (OPCIONAL) só uma chance aos opcionais
     if(data[0].token.idEqual(Ids.INHERITS_ID)):  
         data[0].nexToken(data[0].situation)
         if(data[0].situation == PC.SIG.EndOfProgram): return data
+
+        # add classe herdada
+        tmp.setType(data[0].token.token) # adiciona sendo o mesmo nome da classe herdada
+        tmp.setInherit(data[0].token.token) # TIRAR??????????????
+
         # Verifica TYPE
         data, _typeInherits = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'inharits' must be followed by a TYPE",
         Ids.TYPE_ID, data)
         if(data[0].situation == PC.SIG.EndOfProgram): return data
     
+    # Para lista de tipos
     data[1][1] = tl.Type(_className, _typeInherits)
     data[1][1].methods = []
     data[1][1].attributes = []
-
 
     # Verifica {
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:" + " '{'" + f" expected after class declaration",
@@ -1154,7 +1199,11 @@ def CLASS_func (data):
     # verifica }
     if(not data[0].token.idEqual(Ids.C_BRACKETS)):
         while True:
-            data = FEATURE_func(data)
+
+            data, child = FEATURE_func(data)
+            
+            tmp.addChild(child) # adiciona subárvore retornada
+            
             # verifica ;
             data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:" + " ';'" + f" expected in the end of a feature on {data[0].token.token}",
             Ids.SEMICOLON_ID, data)
@@ -1163,6 +1212,7 @@ def CLASS_func (data):
             if(not data[0].token.idEqual(Ids.ID_ID)):
                 break
     endClassError = f"line {data[0].token.line}:" + " ';'" + f" expected to close class"
+    
     # verifica }
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:" + " '}'" + f" expected o close class statement",
     Ids.C_BRACKETS, data)
@@ -1170,15 +1220,18 @@ def CLASS_func (data):
         data[0].setPs_err(endClassError)
         data[0].addError()
         return data
-        
+
+    # Para lista  de tipos
     data[1][0].addType(data[1][1])
-
-    # data[2][0].append(data[2][1])
-
+    
     # verifica ;
     data, _ = checkToken_N_reportSyntError(endClassError,
     Ids.SEMICOLON_ID, data)
-    if(data[0].situation == PC.SIG.EndOfProgram): return data
+    if(data[0].situation == PC.SIG.EndOfProgram): 
+        data[3].append(tmp)
+        return data
+
+    data[3].append(tmp) # adiciona um tipo a raíz
     data = CLASS_func(data)
 
     return data
@@ -1186,11 +1239,12 @@ def CLASS_func (data):
 def program(line):
     myProgram   = PC.Program(line)
     myTypeList  = tl.Creator()
-    mySintTree  = []
-    data = [myProgram, [myTypeList,0], 0] # data[2] -> dados temporários
+    synTree     = []
+    data = [myProgram, [myTypeList,0], "", synTree]
 
-    start_time = time.time()
     data = CLASS_func(data)
-    print(time.time() - start_time, "seconds")
-
+    # synTree = data[3]
+    # data[1][0].printTypes()
+    # data[1][0].printTypes()
+    st.showTree(synTree)
     return data
