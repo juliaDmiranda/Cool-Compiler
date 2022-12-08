@@ -111,15 +111,38 @@ class Type():
             for a in self.attributes:
                 a.show()
 
+# Criando as Basic Classes
+
+Object_class    = Type("Object"  , 1001, 'BC')
+Object_class.methods = [
+    Method("about"          , "Object"      ,  []   ,1001, 'MBC'),
+    Method("type_name"      , "String"      ,  []   ,1001, 'MBC'),
+    Method("copy"           , "SELF_TYPE"   ,  []   ,1001, 'MBC')
+]
+IO_class        = Type("IO"      , 1002, 'BC')
+IO_class.methods = [
+    Method("out_string"  , "SELF_TYPE"   ,  [('x','String')]    ,1002, 'MBC'),
+    Method("out_int"     , "SELF_TYPE"   ,  [("x","Int")]       ,1002, 'MBC'),
+    Method("in_string"   , "String"      ,  []                  ,1002, 'MBC'),
+    Method("in_int"      , "Int"         ,  []                  ,1002, 'MBC')
+]
+Int_class       = Type("Int"     , 1003, 'BC')
+
+String_class    = Type("String"  , 1004, 'BC')
+String_class.methods = [
+    Method("length" , "Int"    ,  []   ,1001, 'MBC'),
+    Method("concat" , "String" ,  [('s','String')]   ,1001, 'MBC'),
+    Method("substr" , "String" ,  [('i','Int'),('l','Int')]   ,1001, 'MBC')
+]
+Bool_class      = Type("Bool"    , 1005, 'BC')
+
 class Creator():
     '''
     Só é usado para formar a lista de tipos durante a análise sintática
     '''
-    typeList = []
-    hasMain  = False
+    
+    typeList = [Object_class, IO_class, Int_class, String_class, Bool_class]
     def addType(self, obj:Feature):
-        if(obj.name.lower() == "main"):
-            self.hasMain = True 
         self.typeList.append(obj)
 
     def printTypes(self):
