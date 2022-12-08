@@ -1,7 +1,7 @@
 import os
 from Id import Ids
 import Program_class as PC
-import TYPE_LIST_bf  as tl
+import TYPE_LIST  as tl
 import synTree as  st
 
 def ATT_func(data, myTree: st.Node):
@@ -27,7 +27,7 @@ def ATT_func(data, myTree: st.Node):
     """
     # cria raiz
     tmp = st.Node()
-    tmp.setLabel(st.tag.SETID) # não precisa setar de novo(fazer teste depois)
+    tmp.setLabel(st.tag.ASSIGNMENT) # não precisa setar de novo(fazer teste depois)
     tmp.setLine(data[0].token.line)
     tmp.setName(data[0].token.token)
 
@@ -73,7 +73,7 @@ def ID_func(data, myTree: st.Node):
     tmp.setLabel(st.tag.ID)
     tmp.setName(data[0].token.token)
     tmp.setLine(data[0].token.line)
-
+    tmp.setType("Void")
     data[0].nexToken(PC.SIG.TokenFound)
     if(data[0].situation == PC.SIG.EndOfProgram): 
         myTree.addChild(tmp)
@@ -189,6 +189,7 @@ def WHILE_func(data, myTree: st.Node):
     tmp = st.Node()
     tmp.setLabel(st.tag.WHILE)
     tmp.setName(data[0].token.token)
+    tmp.setLine(data[0].token.line)
     tmp.setType("None")
 
     # consome token lido
@@ -627,7 +628,7 @@ def O_BRACKETS_func(data, myTree: st.Node):
     """
     # cria raiz
     tmp = st.Node()
-    tmp.setLabel(st.tag.BRACKETS)
+    tmp.setLabel(st.tag.MULTEXPR)
     tmp.setName(data[0].token.token)
     tmp.setType(data[0].token.token)
     tmp.setLine(data[0].token.line)
@@ -824,6 +825,7 @@ def expr_line(data, myTree: st.Node):
     """
     tmp = st.Node()
     tmp.setLabel(st.tag.EXPRL)
+    tmp.setLine(data[0].token.line)
     foundexpl = False
     while True:
         # modificados para remover recursão a esquerda # +, -, *, /, <, <=, =
@@ -993,7 +995,7 @@ def ATTRIBUTE_func(data, myTree: st.Node):
         if(data[0].situation == PC.SIG.EndOfProgram): return
         data, myTree = expr(data, myTree)
 
-    data[1][1].newAttribute(_AttName,attType)
+    data[1][1].newAttribute(_AttName,attType, myTree.getId(), myTree.line)
     return data, myTree
 
 def formal(data):
@@ -1103,7 +1105,7 @@ def METHOD_func(data, myTree:st.Node):
     Ids.C_BRACKETS, data)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
-    data[1][1].newMethod(_Methodname, _typeOfReturn, _listOfFormals)
+    data[1][1].newMethod(_Methodname, _typeOfReturn, _listOfFormals,myTree.getLine(), myTree.getId())
 
     return data, myTree
 
@@ -1187,7 +1189,7 @@ def CLASS_func (data):
         if(data[0].situation == PC.SIG.EndOfProgram): return data
     
     # Para lista de tipos
-    data[1][1] = tl.Type(_className, _typeInherits)
+    data[1][1] = tl.Type(_className, tmp.getId(),tmp.getLine(), _typeInherits)
     data[1][1].methods = []
     data[1][1].attributes = []
 
@@ -1243,8 +1245,5 @@ def program(line):
     data = [myProgram, [myTypeList,0], "", synTree]
 
     data = CLASS_func(data)
-    # synTree = data[3]
-    # data[1][0].printTypes()
-    # data[1][0].printTypes()
-    st.showTree(synTree)
+    
     return data
