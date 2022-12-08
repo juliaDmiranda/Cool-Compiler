@@ -1,13 +1,15 @@
 import sys
 import lexicalAnalyzer as LA
-import syntaxAnalyzer as SA
-from class_ import Token
-def printDiferente(aux):
-    print(next(aux))
+import syntaxAnalyzer as SYA
+import semAnalyzer as SEA
+
+
 try:
     fileName    =  sys.argv[1]
 except:
-    fileName      =  "cool_programs/primes.cl"
+    fileName      =  "cool_programs/helloWorld.cl"
+
+
 tokens = LA.readNtokenize(fileName)   # Análise léxica
 LA.printTokens(tokens)
 
@@ -17,7 +19,13 @@ try:
         for j in i:
             l.append(j)
 
-    SA.switchTokens(l) 
+    typeList, synTree, synErr = SYA.switchTokens(l) # Análise Sintática
+
+    # SYA.showErrors(synErr)  # printa erros
+    # typeList.printTypes()   # prita lista de tipos
+    # SYA.showTree(synTree)   # passa para arquivo
     
 except StopIteration:
     print("Erro")
+
+SEA.main(typeList, synTree) # Análise semântica
