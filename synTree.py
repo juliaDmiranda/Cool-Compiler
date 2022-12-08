@@ -25,13 +25,13 @@ class tag (Enum):
     NOT         = auto()
     OPE         = auto()
     PARENTHESIS = auto()
-    SETID       = auto()
+    ASSIGNMENT  = auto()
     STRING      = auto()
     TIDE        = auto()
     WHILE       = auto()
 class Node():
     id_obj = itertools.count()
-    label, token ,children,_type, line = None,None, None, None, None # para a análise semântica
+    label, token ,children,_type, line = None,None, None, "-", None # para a análise semântica
     name = ""
     father = "-"
 
@@ -39,6 +39,8 @@ class Node():
         self.id = next(Node.id_obj)
 
     def setLabel(self, label):
+        if(label == tag.CLASS):
+            self.inherit = "-"
         if(isinstance(label, str)):
             if(label == "INTEGER"):
                 label = tag.INTEGER
@@ -54,7 +56,7 @@ class Node():
     def setName(self, name):
         self.name = name
 
-    def setInherit(self, father):
+    def setInherit(self, father = "-"):
         self.inherit = father
 
     def setLine(self, line):
@@ -69,7 +71,8 @@ class Node():
             self.formals = obj
         else:
             self.children.append(obj)
-    
+    def getId(self):
+        return self.id
     def getName(self):
         return self.name
     
@@ -85,27 +88,8 @@ class Node():
                 return f"(f:{self.father}/id:{self.id})<{self.getLine()}>[{str(self.label.name)}] {self.getName()} : {self._type} : {self.formals}"
             except:
                 return f"(f:{self.father}/id:{self.id})<{self.getLine()}>[{str(self.label.name)}]{self.getName()} : {self._type}"
+        elif (self.label == tag.CLASS):
+            return f"(f:{self.father}/id:{self.id})<{self.getLine()}>[{str(self.label.name)}] {self.getName()} : {self.inherit} : {self._type}"
         else:
             return f"(f:{self.father}/id:{self.id})<{self.getLine()}>[{str(self.label.name)}]{self.getName()} : {self._type}"
             
-
-def showTree_aux(myTree:Node, file, print_ = False):
-    try:
-        if(type(myTree) != list):
-            if(print_):
-                print(myTree)
-            file.write("\n"+str(myTree))
-            if(type(myTree) == Node):
-                if(myTree.children != None):
-                    if(len(myTree.children) != 0):
-                        for child in myTree.children:
-                            file = showTree_aux(child, file)   
-        return file
-    except Exception as ex:
-        print(ex.args)
-        print("\n\n\n>>>>>>>>>>>>>",myTree.name)
-
-def showTree(root, print_ = False):
-    file = open("synTree", "w")
-    for c in root:
-        file = showTree_aux(c, file, print_)
