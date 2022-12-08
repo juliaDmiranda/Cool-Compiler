@@ -50,3 +50,6 @@ class Program():
 
     def setPs_err(self, error = []):
         self.ps_err = error
+
+    def getErr(self):
+        return self.err
