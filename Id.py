@@ -46,9 +46,9 @@ class Ids(Enum):
     ID_ID                 =  auto(), ">" 
     TRUE_ID               =  auto(), "true"       
     FALSE_ID              =  auto(), "false"  
-    STRING_ID             =  auto(), "..."   
-    INTEGER_ID            =  auto(), "..."
-    TYPE_ID                 =  auto(), "..."
+    STRING_ID             =  auto(), "STRING"   
+    INTEGER_ID            =  auto(), "INTERGER"
+    TYPE_ID                 =  auto(), "TYPE"
 
     @classmethod
     def match(self, str='oi'):
