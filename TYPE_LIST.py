@@ -1,6 +1,7 @@
 import os
-import synTree as ST
-class Feature(ST.Node):
+
+
+class Feature():
     """
     Classe responsável por armazenar informações de uma feature
 
@@ -34,73 +35,69 @@ class Feature(ST.Node):
         return f" {self.name}-{self._type}\n"
 
 
-class Method(ST.Node):
+class Method(Feature):
     """
     Classe responsável por armazenar informações de um método
     """
-    name, _type = "","" 
+    # name, _type = "","" 
     formals     = []
     qtdFormal   = 0
-    scope       = None
+    scopeId     = 0
+    node        = None
 
-    def __init__(self, _name, _type, _formals):
-        self.name = _name
-        self._type = _type
+    def __init__(self, _name, _Type, _formals,line, _id):
+        super().__init__(_name, _Type)
+        self.scopeId = _id
         self.formals = _formals
         self.qtdFormal = len(self.formals)
+        self.line = line
 
     def show(self):
         print(f"(M) {self.name}-{self._type}")
         if(self.formals != []):
             print(str(self.formals))
+    def toTree(self, noden):
+        self.node = noden
 
-    def addChild(self, obj):
-        if(self.children != None):
-            print("Node METHOD do not have more then one child")
-        else:
-            self.children = obj  
 
-class Attribute(ST.Node):
+class Attribute(Feature):
     """
     Função para armazenar informações de atributos de um método
     """
-    name, _type = "","" 
-    def __init__(self, _name, _type) -> None:
-        self.name = _name
-        self._type = _type
+    node    = None
+    line    = 0
+    scopeId = 0
+    def __init__(self, _name, _type, line, _id) -> None:
+        super().__init__(_name, _type)
+        self.scopeId = _id
+        self.line    = line
 
     def show(self):
-        print("(A) " +  f" {self.name}-{self._type}\n")
-
-    def addChild(self, obj):
-        if(self.children != None):
-            print("Node ATTRIBUTE do not have more then one child")
-        else:
-            self.children = obj  
+        print("(A) " + super().__str__())
+    def toTree(self, noden):
+        self.node = noden
 
 class Type():
     """
     Classe responsável por armazenar e manipular um tipo em Cool
     """
-    # adiciona features
-        # métodos
-        # atributos
-    name        = ""
     parent      = ""
     methods     = []    
     attributes  = []
+    scopeId     = 0 
 
-    def __init__(self, _name, _parent = ""):
+    def __init__(self, _name, _id,line, _parent = ""):
         self.name   = _name
         if(_parent != ""): self.parent = _parent
+        self.scopeId = _id
+        self.line = line
 
-        
-    def newMethod(self,name, _type, _formals):
+    def newMethod(self,name, _type, _formals,line, scope_id):
         # print(len(self.methods))
-        self.methods.append(Method(name, _type, _formals))
+        self.methods.append(Method(name, _type, _formals,line, scope_id))
 
-    def newAttribute(self, name, _type):
-        self.attributes.append(Attribute(name, _type))
+    def newAttribute(self, name, _type, line, _id):
+        self.attributes.append(Attribute(name, _type, line, _id))
 
     def show(self):
         print(f"(T) {self.name}({self.parent})")
@@ -119,13 +116,79 @@ class Creator():
     Só é usado para formar a lista de tipos durante a análise sintática
     '''
     typeList = []
-    
-    def addType(self, obj):
+    hasMain  = False
+    def addType(self, obj:Feature):
+        if(obj.name.lower() == "main"):
+            self.hasMain = True 
         self.typeList.append(obj)
 
     def printTypes(self):
+        os.system("PAUSE")
         os.system("CLS")
         for _type in self.typeList:
             _type.show()
             os.system("PAUSE")
             os.system("CLS")
+
+    def uniqueType(self, obj):
+        if(len([_type.name for _type in self.typeList if _type.name.lower() == obj.name.lower()]) == 1):
+            True
+        else:
+            print(f" len == {len([_type.name for _type in self.typeList if _type.name.lower() == obj.name.lower()])}")
+            False
+
+    def getClass(self, name, _id=False): # retorna quantas vezes a classe foi encontrada e o objeto inteiro
+        cont = 0
+        rtn  = False 
+        for _type in self.typeList:
+            if(_type.name == name):
+                cont+=1
+                if (not _id):
+                    rtn = _type
+                else:
+                    if(_type.scopeId == _id):
+                        rtn = _type
+        return  rtn, cont
+
+    def getMethod(self, name,classNameOrObj = "", _id= False):
+        if(classNameOrObj != "" and isinstance(classNameOrObj,str)):
+            obj, _ = self.getClass(classNameOrObj) # retorna a estrutura da classe onde o methodo está
+        else:
+            obj = classNameOrObj
+        cont = 0
+        rtn  = False
+
+        for m in obj.methods: # procura o método
+            if(m.name == name):
+                cont+=1
+                if (not _id):
+                    rtn = m
+                else:
+                    if(m.scopeId == _id):
+                        rtn = m
+
+        return rtn, cont
+
+    def getAttribute(self, className, name, obj = None, _id=False):
+        if(obj == None):
+            obj, _ = self.getClass(className) # retorna a estrutura da classe onde o atributo está
+        cont = 0
+        rtn  = False
+
+        for a in obj.attributes: # procura o método
+            if(a.name == name):
+                cont+=1
+                if (not _id):
+                    rtn = a
+                else:
+                    if(a.scopeId == _id):
+                        rtn = a
+
+        return rtn, cont
+
+    def hasID():
+        '''
+        Função para verificar se 
+            - o método possui a variável usada
+            - ou se, caso tenha 
+        '''
