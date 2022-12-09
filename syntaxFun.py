@@ -4,7 +4,7 @@ import Program_class as PC
 import TYPE_LIST  as tl
 import synTree as  st
 
-def ATT_func(data, myTree: st.Node):
+def ATT_func(data, myTree):
     """
     SOBRE
     -------------
@@ -27,6 +27,7 @@ def ATT_func(data, myTree: st.Node):
     """
     # cria raiz
     tmp = st.Node()
+    tmp.children = []
     tmp.setLabel(st.tag.ASSIGNMENT) # não precisa setar de novo(fazer teste depois)
     tmp.setLine(data[0].token.line)
     tmp.setName(data[0].token.token)
@@ -44,7 +45,7 @@ def ATT_func(data, myTree: st.Node):
     myTree.addChild(tmp)
     return data, myTree
 
-def ID_func(data, myTree: st.Node):
+def ID_func(data, myTree):
     """
     SOBRE
     -------------
@@ -70,6 +71,7 @@ def ID_func(data, myTree: st.Node):
     """
     # adicionar raiz
     tmp = st.Node()
+    tmp.children = []
     tmp.setLabel(st.tag.ID)
     tmp.setName(data[0].token.token)
     tmp.setLine(data[0].token.line)
@@ -93,7 +95,7 @@ def ID_func(data, myTree: st.Node):
     myTree.addChild(tmp)
     return data, myTree
 
-def IF_func(data, myTree: st.Node):
+def IF_func(data, myTree):
     """
     SOBRE
     -------------
@@ -119,6 +121,7 @@ def IF_func(data, myTree: st.Node):
     """
     # cria raiz do tipo IF
     tmp = st.Node()
+    tmp.children = []
     tmp.setLabel(st.tag.IF)
     tmp.setName(data[0].token.token)
     tmp.setLine(data[0].token.line)
@@ -157,7 +160,7 @@ def IF_func(data, myTree: st.Node):
     myTree.addChild(tmp)
     return data, myTree
 
-def WHILE_func(data, myTree: st.Node):
+def WHILE_func(data, myTree):
     """
     SOBRE
     -------------
@@ -187,6 +190,7 @@ def WHILE_func(data, myTree: st.Node):
     """
     # cria raiz do tipo WHILE
     tmp = st.Node()
+    tmp.children = []
     tmp.setLabel(st.tag.WHILE)
     tmp.setName(data[0].token.token)
     tmp.setLine(data[0].token.line)
@@ -219,7 +223,7 @@ def WHILE_func(data, myTree: st.Node):
     return data, myTree
 
 # NÃO SEI O QUE FAZER COM O LETTTT
-def LET_func(data, myTree: st.Node):
+def LET_func(data, myTree):
     """
     SOBRE
     -------------
@@ -242,6 +246,7 @@ def LET_func(data, myTree: st.Node):
     """
     # Cria raíz
     tmp = st.Node()
+    tmp.children = []
     tmp.setLabel(st.tag.LET)
     tmp.setName(data[0].token.token)
     tmp.setLine(data[0].token.line)
@@ -302,7 +307,7 @@ def LET_func(data, myTree: st.Node):
 
     return data, myTree
 
-def CASE_func(data, myTree: st.Node):
+def CASE_func(data, myTree):
     """
     SOBRE
     -------------
@@ -326,6 +331,7 @@ def CASE_func(data, myTree: st.Node):
     """
     # criar raíz
     tmp = st.Node()
+    tmp.children = []
     tmp.setLabel(st.tag.CASE)
     tmp.setName(data[0].token.token)
 
@@ -394,7 +400,7 @@ def CASE_func(data, myTree: st.Node):
 
     return data, myTree
 
-def NEW_func(data, myTree: st.Node):
+def NEW_func(data, myTree):
     """
     SOBRE
     -------------
@@ -415,6 +421,7 @@ def NEW_func(data, myTree: st.Node):
     # cria raiz
     
     tmp = st.Node()
+    tmp.children = []
     tmp.setLabel(st.tag.NEW)
     tmp.setName(data[0].token.token)
     tmp.setLine(data[0].token.line)
@@ -433,7 +440,7 @@ def NEW_func(data, myTree: st.Node):
     myTree.addChild(tmp)
     return data, myTree
 
-def ISVOID_func(data, myTree: st.Node):
+def ISVOID_func(data, myTree):
     """
     SOBRE
     -------------
@@ -455,6 +462,7 @@ def ISVOID_func(data, myTree: st.Node):
     """
     # cria raiz
     tmp = st.Node()
+    tmp.children = []
     tmp.setLabel(st.tag.ISVOID)
     tmp.setName(data[0].token.token)
     tmp.setType(data[0].token.token)
@@ -472,7 +480,7 @@ def ISVOID_func(data, myTree: st.Node):
 
     return data, myTree
 
-def NOT_func(data, myTree: st.Node):
+def NOT_func(data, myTree):
     """
     SOBRE
     -------------
@@ -495,6 +503,7 @@ def NOT_func(data, myTree: st.Node):
     """
     # cria raiz
     tmp = st.Node()
+    tmp.children = []
     tmp.setLabel(st.tag.NOT)
     tmp.setName(data[0].token.token)
     tmp.setType(data[0].token.token)
@@ -512,7 +521,7 @@ def NOT_func(data, myTree: st.Node):
 
     return data, myTree
 
-def TIDE_func(data, myTree: st.Node):
+def TIDE_func(data, myTree):
     """
     SOBRE
     -------------
@@ -535,6 +544,7 @@ def TIDE_func(data, myTree: st.Node):
     """
     # cria raiz
     tmp = st.Node()
+    tmp.children = []
     tmp.setLabel(st.tag.TIDE)
     tmp.setName(data[0].token.token)
     tmp.setType(data[0].token.token)
@@ -550,7 +560,7 @@ def TIDE_func(data, myTree: st.Node):
     myTree.addChild(tmp)
     return data, myTree
 
-def O_PARENTHESIS_func(data, myTree: st.Node):
+def O_PARENTHESIS_func(data, myTree):
     """
     SOBRE
     -------------
@@ -572,6 +582,7 @@ def O_PARENTHESIS_func(data, myTree: st.Node):
     """
     # cria raiz
     tmp = st.Node()
+    tmp.children = []
     tmp.setLabel(st.tag.PARENTHESIS)
     tmp.setLine(data[0].token.line)
     tmp.setName(data[0].token.token)
@@ -605,7 +616,7 @@ def O_PARENTHESIS_func(data, myTree: st.Node):
     myTree.addChild(tmp)
     return data, myTree
 
-def O_BRACKETS_func(data, myTree: st.Node):
+def O_BRACKETS_func(data, myTree):
     """
     SOBRE
     -------------
@@ -628,6 +639,7 @@ def O_BRACKETS_func(data, myTree: st.Node):
     """
     # cria raiz
     tmp = st.Node()
+    tmp.children = []
     tmp.setLabel(st.tag.MULTEXPR)
     tmp.setName(data[0].token.token)
     tmp.setType(data[0].token.token)
@@ -663,7 +675,7 @@ def O_BRACKETS_func(data, myTree: st.Node):
 
     return data, myTree
 
-def DOT_func(data, myTree: st.Node):
+def DOT_func(data, myTree):
     """
     SOBRE
     -------------
@@ -688,6 +700,7 @@ def DOT_func(data, myTree: st.Node):
 
     # cria raiz
     tmp = st.Node()
+    tmp.children = []
     tmp.setLabel(st.tag.DOT)
     tmp.setName(data[0].token.token)
     tmp.setType(data[0].token.token)
@@ -706,7 +719,7 @@ def DOT_func(data, myTree: st.Node):
 
     return data, myTree
 
-def AT_func(data, myTree: st.Node):
+def AT_func(data, myTree):
     """
     SOBRE
     -------------
@@ -728,6 +741,7 @@ def AT_func(data, myTree: st.Node):
     """
     # cria raiz
     tmp = st.Node()
+    tmp.children = []
     tmp.setLabel(st.tag.FUNCALL)
     tmp.setLine(data[0].token.line)
 
@@ -759,7 +773,7 @@ def AT_func(data, myTree: st.Node):
     myTree.addChild(tmp)
     return data, myTree
 
-def OPs_func(data, myTree: st.Node):
+def OPs_func(data, myTree):
     """
     SOBRE
     -------------
@@ -786,6 +800,7 @@ def OPs_func(data, myTree: st.Node):
     """
     # cria raiz
     tmp = st.Node()
+    tmp.children = []
     tmp.setName(data[0].token.token)
     tmp.setType(data[0].token.token)
     tmp.setLine(data[0].token.line)
@@ -805,7 +820,7 @@ def OPs_func(data, myTree: st.Node):
 
     return  data, myTree
 
-def expr_line(data, myTree: st.Node):
+def expr_line(data, myTree):
     """
     SOBRE
     -------------
@@ -824,6 +839,7 @@ def expr_line(data, myTree: st.Node):
     ----------------------------
     """
     tmp = st.Node()
+    tmp.children = []
     tmp.setLabel(st.tag.EXPRL)
     tmp.setLine(data[0].token.line)
     foundexpl = False
@@ -847,7 +863,7 @@ def expr_line(data, myTree: st.Node):
 
     return data, myTree
        
-def expr(data, myTree: st.Node):
+def expr(data, myTree):
     """
     SOBRE
     -------------
@@ -880,6 +896,7 @@ def expr(data, myTree: st.Node):
     # Terminais
     if(data[0].token.idEqual(Ids.INTEGER_ID) or data[0].token.idEqual(Ids.STRING_ID) or data[0].token.idEqual(Ids.TRUE_ID) or data[0].token.idEqual(Ids.FALSE_ID)):
         tmp = st.Node()
+        tmp.children = []
         tmp.setLine(data[0].token.line)
         tmp.setName(data[0].token.token)
         tmp.setType(data[0].token.id)
@@ -960,7 +977,7 @@ def checkToken_N_reportSyntError(errSTR, ID_comp, data, isFormal = False):
         
     return data, typeOrName
 
-def ATTRIBUTE_func(data, myTree: st.Node):
+def ATTRIBUTE_func(data, myTree):
     """
     SOBRE
     ----------
@@ -1039,7 +1056,7 @@ def formal(data):
         if(data[0].situation == PC.SIG.EndOfProgram): return data
     return data, _listOfFormals
     
-def METHOD_func(data, myTree:st.Node):
+def METHOD_func(data, myTree:st.Node):#oi
     """
     SOBRE
     --------
@@ -1060,7 +1077,6 @@ def METHOD_func(data, myTree:st.Node):
     _listOfFormals = []
 
     myTree.setLabel(st.tag.METHOD) # informa que é um nó do tipo Método
-
     if(data[0].token.idEqual(Ids.C_PARENTHESIS)):
         data[0].nexToken(data[0].situation) # pula o { encontrado extra pois terá mais de uma expressão
         if(data[0].situation == PC.SIG.EndOfProgram): return data 
@@ -1107,6 +1123,7 @@ def METHOD_func(data, myTree:st.Node):
 
     data[1][1].newMethod(_Methodname, _typeOfReturn, _listOfFormals,myTree.getLine(), myTree.getId())
 
+
     return data, myTree
 
 def FEATURE_func(data):
@@ -1115,6 +1132,7 @@ def FEATURE_func(data):
     """
 
     tmp = st.Node() # nó temporário
+    tmp.children = []
 
     _name =  ""
     tmp.setLine(data[0].token.line)
@@ -1129,6 +1147,7 @@ def FEATURE_func(data):
         data[0].nexToken(data[0].situation)
         if(data[0].situation == PC.SIG.EndOfProgram): return data, tmp
         data, tmp =  METHOD_func(data, tmp)
+        
         return data, tmp
     else:
         # segunda chance só se o token analisado não for :
@@ -1141,6 +1160,7 @@ def FEATURE_func(data):
                 data[0].nexToken(PC.SIG.TokenFound)
                 if(data[0].situation == PC.SIG.EndOfProgram): return data, tmp
                 data, tmp = ATTRIBUTE_func(data, tmp)
+
             elif(data[0].afToken().idEqual(Ids.COLON_ID)): # se o próximo for :
                 data[0].nexToken(PC.SIG.TokenFound)
                 if(data[0].situation == PC.SIG.EndOfProgram): return data, tmp
@@ -1151,6 +1171,7 @@ def FEATURE_func(data):
 
                 data[0].setPs_err(f"line {data[0].token.line}: '('(method) or ':'(attribute) expected")
                 data[0].addError()
+            
 
         return data, tmp # retorna filho da função
         
@@ -1159,6 +1180,7 @@ def CLASS_func (data):
 
     # cria raiz    
     tmp = st.Node()
+    tmp.children = []
 
     # Verifica class
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:" + "Must be a class declaration",
