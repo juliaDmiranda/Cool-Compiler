@@ -4,6 +4,65 @@ import TYPE_LIST as TL
 global TYPE_LIST
 TYPE_LIST = []
 
+def ATTRIBUTE   (e:Node):
+    pass
+def BRACKETS    (e:Node):
+    pass
+def BOOL        (e:Node):
+    pass
+def CLASS       (e:Node):
+    pass
+def CASE        (e:Node):
+    pass
+def CASEOPT     (e:Node):
+    pass
+def DOT         (e:Node):
+    pass
+def EXPRL       (e:Node):
+    pass
+def FUNCALL     (e:Node):
+    pass
+def FUNCALLID   (e:Node):
+    pass
+def FORMALS     (e:Node):
+    pass
+def IF          (e:Node):
+    pass
+def ID          (e:Node):
+    '''
+    - verificar se o ID existe no escopo ou se existe em outra classe herdada
+    - atualizar tipo retornado na árvore
+    '''
+    pass
+def ISVOID      (e:Node):
+    pass
+def INTEGER     (e:Node):
+    pass
+def LET         (e:Node):
+    pass
+def LETOPT      (e:Node):
+    pass
+def METHOD      (e:Node):
+    pass
+def MULTEXPR    (e:Node):
+    pass
+def NEW         (e:Node):
+    pass
+def NOT         (e:Node):
+    pass
+def OPE         (e:Node):
+    pass
+def PARENTHESIS (e:Node):
+    pass
+def ASSIGNMENT  (e:Node):
+    pass
+def STRING      (e:Node):
+    pass
+def TIDE        (e:Node):
+    pass
+def WHILE       (e:Node):
+    pass
+
 class Analyser:
     setSelf_type = False 
     errs = []
@@ -11,7 +70,7 @@ class Analyser:
     classInheritedScope = 0 # guarda cópia da estrutura da classe
     currentlyScope      = 0
     typeListAnalyzer:TL.Creator
-    scope             = None # no Id, por exemplo saber que foi um assgnment
+    scope             = [] # no Id, por exemplo saber que foi um assgnment
     '''
     Se o contexto for um método guardar 
     - adicionar id no método
@@ -42,11 +101,16 @@ class Analyser:
         obj, qtd = self.typeListAnalyzer.getClass(obj.name, _id)
 
         if(qtd > 1): # veritica se o tipo é repetido
-            self.addError(f"<{obj.line}> Class '{obj.name}' declared multiple times ({qtd})")
+            if(obj.name.lower() in ['object','io','int','string','bool'] and obj.line!="BC"):
+                self.addError(f"<{obj.line}> Class '{obj.name}' is Cool's basic class. You are not allowed to redefine it({qtd})")
+            else:
+                self.addError(f"<{obj.line}> Class '{obj.name}' declared multiple times ({qtd})")
 
         # se herda, verifica se a classe herdada existe
         if(obj.parent!=""):
-            if(not self.hasClass(obj.parent)):
+            if(obj.parent.lower() in ['int','bool','string']):
+                self.addError(f"<{obj.line}> Class '{obj.parent}' is Cool's basic class. You are not allowed to inherit from it")
+            if(not self.hasClass(obj.parent,"justCheck")):
                 self.addError(f"<{obj.line}> Class '{obj.name}' inherits class '{obj.parent}', but this class is not defined")
 
     def checkMethod(self, obj:TL.Method, _type, _id): # informar se o tipo foi duplicado
@@ -70,7 +134,7 @@ class Analyser:
 
         cont = 1
         # verificação dos parâmetros
-        for f in obj.formals:   
+        for f in obj.formals:  
             # estrutura de um parâmetro --> (_nameOfFormal,_typeOfFormal)
             if(len([comp for comp in obj.formals if f == comp]) != 1): # verifica se parâmetro foi declarado mais de uma vez
                 self.addError(f"<{obj.line}> Formal '{f[0]}'(formal {cont}) was defined multiple times.")
@@ -123,12 +187,6 @@ class Analyser:
         return obj
 
 
-def ID(idNode):
-    '''
-    - verificar se o ID existe no escopo ou se existe em outra classe herdada
-    - atualizar tipo retornado na árvore
-    '''
-    pass
 # criar tabela hash para cada função
 def exprAnalyzer(expr: Node):
     """
@@ -146,20 +204,19 @@ def exprAnalyzer(expr: Node):
         # retorna tipo (label)
         pass
     else:
-        for e in expr:
+        for e in expr.children:
             rType = eval(str(e.getLabel().name)+"(e)")
 
-            rType = exprAnalyzer(e)
-        return rType # retorna tipo
+    return rType # retorna tipo
 
-def exprMethodAnalyzer(methodExpr):
+def exprMethodAnalyzer(methodExpr:Node):
     """
     Retorna um TIPO (string ou node?)
     """
 
     rType = "None" 
 
-    for expr in methodExpr: # verifica cada expressão
+    for expr in methodExpr.children: # verifica cada expressão
         rType  = exprAnalyzer(expr)
     return rType 
 
@@ -182,31 +239,32 @@ def methodAnalyzer(method: Node):
     Análise de um método:
         - retorno deve corresponder ao tipo de retorno
     '''
-    # verificar se tipo de retorno existe
-
-    # se tiver parâmetro
-        # verificar se tipo do parâmetro existe
-
     if(method.children == []):
         #Informar erro de valor Nulo não ser igual ao tipo a ser retornado
         pass
     else:
         lastReturnedType = None # para guardar o retorno da última expressão
         for expr in method.children:
-
             lastReturnedType = exprMethodAnalyzer(expr)   # guarda TIPO retornado
 
+    lastReturnedType = "Int"
     # verificar se retorno da última expressão é o mesmo do declarado como retorno do método    
+    if(method._type != lastReturnedType):
+        analyzer.addError(f"<{method.getLine()}> '{method.getName()}' returns type '{method._type}', but the last expression returned type '{lastReturnedType}'")
 
-def classAnalyzer(root):
+        
+
+def classAnalyzer(root:Node):
     for _class in root: # análise de cada classe do programa
 
         # Guardar cópia da estrutura da classe
         # Guardar cópia da classe herdade (se tiver)
+        analyzer.scope.append(analyzer.hasClass(_class.name))
+        analyzer.scope.append(analyzer.hasClass(_class.father))
     
-        # Atualizar escopo (id)
         for feauture in _class.children: # análise de feautures
-            if(feauture.getLabel() == tag.METHOD): 
+            if(feauture.getLabel() == tag.METHOD):
+                analyzer.scope.append(analyzer.hasMethod(_class.name, feauture.name)) # guarda cópia do método 
                 methodAnalyzer(feauture)
             
             elif(feauture.getLabel() == tag.ATTRIBUTE): 
@@ -230,8 +288,10 @@ def preAnalyzer(typeList):
 def main(typeList, synTree):
     global analyzer
     analyzer = Analyser(typeList)
-    analyzer.typeListAnalyzer.printTypes()
+
     preAnalyzer(typeList)
+    # classAnalyzer(synTree)
+
     with open("ERROSEMANTICO.txt", "w") as file:
         for e in analyzer.errs:
             file.write(e+"\n")
