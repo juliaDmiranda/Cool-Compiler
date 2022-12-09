@@ -7,7 +7,7 @@ import semAnalyzer as SEA
 try:
     fileName    =  sys.argv[1]
 except:
-    fileName      =  "cool_programs/helloWorld.cl"
+    fileName      =  "cool_programs/book.cl"
 
 
 tokens = LA.readNtokenize(fileName)   # Análise léxica
@@ -23,7 +23,7 @@ try:
 
     # SYA.showErrors(synErr)  # printa erros
     # typeList.printTypes()   # prita lista de tipos
-    # SYA.showTree(synTree)   # passa para arquivo
+    SYA.showTree(synTree)   # passa para arquivo
     
 except StopIteration:
     print("Erro")

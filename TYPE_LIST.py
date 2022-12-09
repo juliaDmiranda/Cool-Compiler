@@ -103,22 +103,21 @@ class Type():
         print(f"(T) {self.name}({self.parent})")
         
         if(self.methods !=[]):
-            # print(f"(M) {len(self.methods)}")
             for m in self.methods:
                 m.show()
+
         if(self.attributes != []):
-            # print(f"(A) {len(self.attributes)}")
             for a in self.attributes:
                 a.show()
 
 # Criando as Basic Classes
-
 Object_class    = Type("Object"  , 1001, 'BC')
 Object_class.methods = [
     Method("about"          , "Object"      ,  []   ,1001, 'MBC'),
     Method("type_name"      , "String"      ,  []   ,1001, 'MBC'),
     Method("copy"           , "SELF_TYPE"   ,  []   ,1001, 'MBC')
 ]
+
 IO_class        = Type("IO"      , 1002, 'BC')
 IO_class.methods = [
     Method("out_string"  , "SELF_TYPE"   ,  [('x','String')]    ,1002, 'MBC'),
@@ -140,7 +139,7 @@ class Creator():
     '''
     Só é usado para formar a lista de tipos durante a análise sintática
     '''
-    
+
     typeList = [Object_class, IO_class, Int_class, String_class, Bool_class]
     def addType(self, obj:Feature):
         self.typeList.append(obj)
