@@ -31,7 +31,7 @@ class tag (Enum):
     WHILE       = auto()
 class Node():
     id_obj = itertools.count()
-    label, token ,children,_type, line = None,None, None, "-", None # para a análise semântica
+    label, token ,children,_type, line = None,None, [], "-", None # para a análise semântica
     name = ""
     father = "-"
 
@@ -63,14 +63,15 @@ class Node():
         self.line = line
 
     def addChild(self, obj="NULL", hasFormals = False):
-        if(isinstance(obj, Node)):
-            obj.father = self.id
         if(self.children == None):
             self.children = []
-        if(hasFormals):
-            self.formals = obj
-        else:
-            self.children.append(obj)
+        if(obj != "NULL"):
+            if(isinstance(obj, Node)):
+                obj.father = self.id
+            if(hasFormals):
+                self.formals = obj
+            else:
+                self.children.append(obj)
     def getId(self):
         return self.id
     def getName(self):
