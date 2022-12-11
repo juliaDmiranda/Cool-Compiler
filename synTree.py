@@ -1,8 +1,10 @@
 from enum import Enum, auto
 import itertools
+from Id import Ids 
 
 class tag (Enum):
     ATTRIBUTE   = auto()
+    ARGUMENT    = auto()
     BRACKETS    = auto()
     BOOL        = auto()
     CLASS       = auto()
@@ -51,7 +53,14 @@ class Node():
         self.label = label
     
     def setType(self, type):
-        self._type = type
+        if(type == Ids.INTEGER_ID):
+            self._type = "Int" 
+        elif(type == Ids.STRING_ID):
+            self._type = "String" 
+        elif(type == Ids.TRUE_ID or type == Ids.FALSE_ID ):
+            self._type = "Bool" 
+        else:
+            self._type = type
 
     def setName(self, name):
         self.name = name
