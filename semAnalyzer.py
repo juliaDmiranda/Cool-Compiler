@@ -4,7 +4,149 @@ import TYPE_LIST as TL
 global TYPE_LIST
 TYPE_LIST = []
 
+class Analyzer:
+    setSelf_type = False 
+    errs = []
+    classScope          = 0 # guarda cópia da estrutura da classe
+    classInheritedScope = 0 # guarda cópia da estrutura da classe
+    currentlyScope      = 0
+    typeListAnalyzer:TL.Creator
+    scope             = [] # no Id, por exemplo saber que foi um assgnment
+    '''
+    Se o contexto for um método guardar 
+    - adicionar id no método
+    '''
+    def __init__(self, typeList:TL.Creator):
+        self.typeListAnalyzer = typeList
+
+    def pop(self):
+        self.scope.pop(0)
+    def push(self, obj):
+        if not obj:
+            pass
+        else:
+            self.scope.insert(0, obj)
+    def addError(self, msg):
+        self.errs.append(msg)
+    def setScope(self, scope): # basicamente o id do pai
+        self.currentlyScope = scope
+    def getScope(self):
+        return self.scope
+    def setContext(self, scope):
+        self.scope = scope
+
+
+    def getTypes(self): # retorna a lista de tipos
+        return self.typeListAnalyzer.typeList
+
+    def checkType(self, obj:TL.Type): # informar se o tipo foi duplicado
+        '''
+        Verificações sobre uma classe:
+            - Foi declarada mais de uma vez
+            - Herda de uma classexiste
+        '''
+        if(obj.duplicated): # veritica se o tipo é repetido
+            if(obj.name.lower() in ['object','io','int','string','bool'] and obj.line!="BC"):
+                self.addError(f"<{obj.line}> Class '{obj.name}' is Cool's basic class. You are not allowed to redefine it.")
+            else:
+                self.addError(f"<{obj.line}> Class '{obj.name}' declared multiple times.")
+
+        # se herda, verifica se a classe herdada existe
+        if(obj.parent!=""):
+            if(obj.parent.lower() in ['int','bool','string']):
+                self.addError(f"<{obj.line}> It isn't allowed to inherit from '{obj.parent}' type.")
+            if(not self.typeListAnalyzer.getClass(obj.parent)):
+                self.addError(f"<{obj.line}> Class '{obj.name}' inherits class '{obj.parent}', but this class is not defined.")
+
+    def checkMethod(self, obj:TL.Method): 
+        '''
+        SOBRE
+        -----
+        Método para verificações sobre a lista de tipos mapeada durante a análise sintática.
+        Quanto a cada método de uma classe, verifica-se:
+            - Se um método de mesmo nome já foi declarado
+            - Se o tipo retornado pelo método existe
+            - Sobre os parâmetros:
+                - Se um parâmetro de mesmo nome está sendo passado 
+                - Se o tipo do parâmetro passsado existe
+        '''
+        # Verifica de método foi declarado mais de uma vez
+        if(obj.duplicated):
+            self.addError(f"<{obj.line}> Method '{obj.name}' was already defined.")
+            
+        # Verifica se o tipo a ser retornado existe
+        if(not self.typeListAnalyzer.getClass(obj._type)):
+            if(obj._type != "SELF_TYPE"):
+                self.addError(f"<{obj.line}> Method '{obj.name}' returns type '{obj._type}', but this type is not defined.")
+
+        # verificação dos parâmetros
+        for cont,f in enumerate(obj.formals):  
+
+            # estrutura de um parâmetro --> (_nameOfFormal,_typeOfFormal)
+            if(len([comp for comp in obj.formals if f[0] == comp[0]]) != 1): # verifica se parâmetro foi declarado mais de uma vez
+                self.addError(f"<{obj.line}> Formal '{f[0]}'(formal {cont}) was already defined.")
+            
+            # verifica se tipo do parâmetro existe
+            if(not self.typeListAnalyzer.getClass(f[1])):
+                if(obj._type != "SELF_TYPE"):
+                    self.addError(f"<{obj.line}> Formal '{f[0]}'(formal {cont}) has type '{f[1]}', but this type is not defined.")
+
+    def checkAttribute(self, obj:TL.Attribute):
+        '''
+        SOBRE
+        -----
+        Método para verificações sobre a lista de tipos mapeada durante a análise sintática.
+        Quanto a cada atributo de uma classe, verifica-se:
+            - Se o atributo de mesmo nome já foi declarado
+            - Se o atributo foi declarado com um tipo tipo existe
+        '''
+        # Verifica de atributo foi declarado mais de uma vez
+        if(obj.duplicated):
+            self.addError(f"<{obj.line}> Attribute '{obj.name}' was already defined.")
+            
+        # Verifica se o tipo a ser retornado existe
+        if(not self.typeListAnalyzer.getClass(obj._type)):
+            if(obj._type != "SELF_TYPE"):
+                self.addError(f"<{obj.line}> Attribute '{obj.name}' has type '{obj._type}', but this type is not defined.")
+
+    def hasClass(self, className, line = "*", msg = " "):
+        '''
+        Dado o nome da classe, o método retorna se essa classe existe ou não no programa
+
+        Se a classe existir é retornada
+        Se não retorna False
+        '''
+        obj = self.typeListAnalyzer.getClass(className)
+        
+        if(not obj and line != "justCheck" and className != "-"):
+            self.addError(f"<{line}>{msg}Class '{className}' is not defined.")
+        return obj
+
+    def hasMethod(self, className, methodName, line='*'):
+        '''
+        Dado o nome da classe e do método, o método retorna se esse método existe ou não na classe nomeada
+        
+        Se o método existir é retornado
+        Se não retorna False
+        '''
+        obj = self.typeListAnalyzer.getClass(className)[0].getMethod(methodName)
+        if(not obj):
+            self.addError(f"<{line}> Method '{methodName}' is not defined.")
+        return obj
+
+    def compatibleType(self,_type, rType):
+        if(_type == rType):
+            return True
+        else:
+            return False
+    def showScope(self, nodeName):
+        print("Node",nodeName)
+        for i in self.scope:
+            print("i>>> ",i)
+
 def ATTRIBUTE   (e:Node):
+    pass
+def ARGUMENT    (e:Node):
     pass
 def BRACKETS    (e:Node):
     pass
@@ -63,130 +205,6 @@ def TIDE        (e:Node):
 def WHILE       (e:Node):
     pass
 
-class Analyser:
-    setSelf_type = False 
-    errs = []
-    classScope          = 0 # guarda cópia da estrutura da classe
-    classInheritedScope = 0 # guarda cópia da estrutura da classe
-    currentlyScope      = 0
-    typeListAnalyzer:TL.Creator
-    scope             = [] # no Id, por exemplo saber que foi um assgnment
-    '''
-    Se o contexto for um método guardar 
-    - adicionar id no método
-    '''
-    def __init__(self, typeList:TL.Creator):
-        self.typeListAnalyzer = typeList
-
-    def addError(self, msg):
-        self.errs.append(msg)
-    def setScope(self, scope): # basicamente o id do pai
-        self.currentlyScope = scope
-    def getScope(self):
-        return self.currentlyScope
-    def setContext(self, scope):
-        self.scope = scope
-    def getContext(self):
-        return self.context
-
-    def getTypes(self): # retorna a lista de tipos
-        return self.typeListAnalyzer.typeList
-
-    def checkType(self, obj:TL.Type, _id): # informar se o tipo foi duplicado
-        '''
-        Verificações sobre uma classe:
-            - Foi declarada mais de uma vez
-            - Herda de uma classe inexistente
-        '''
-        obj, qtd = self.typeListAnalyzer.getClass(obj.name, _id)
-
-        if(qtd > 1): # veritica se o tipo é repetido
-            if(obj.name.lower() in ['object','io','int','string','bool'] and obj.line!="BC"):
-                self.addError(f"<{obj.line}> Class '{obj.name}' is Cool's basic class. You are not allowed to redefine it({qtd})")
-            else:
-                self.addError(f"<{obj.line}> Class '{obj.name}' declared multiple times ({qtd})")
-
-        # se herda, verifica se a classe herdada existe
-        if(obj.parent!=""):
-            if(obj.parent.lower() in ['int','bool','string']):
-                self.addError(f"<{obj.line}> Class '{obj.parent}' is Cool's basic class. You are not allowed to inherit from it")
-            if(not self.hasClass(obj.parent,"justCheck")):
-                self.addError(f"<{obj.line}> Class '{obj.name}' inherits class '{obj.parent}', but this class is not defined")
-
-    def checkMethod(self, obj:TL.Method, _type, _id): # informar se o tipo foi duplicado
-        '''
-        Verificação sobre um método
-            - Se foi declarado mais de uma vez
-            - Se o tipo a ser retornado existe
-            - Parâmetros
-                - declarado mais de uma vez
-                - tipo do parâmetro é inexistente
-        '''
-        # Verifica de método foi declarado mais de uma vez
-        obj, qtd = self.typeListAnalyzer.getMethod(obj.name, _type, _id)
-        if(qtd > 1):
-            self.addError(f"<{obj.line}> Method '{obj.name}' was defined multiple times({qtd})")
-            
-        # Verifica se o tipo a ser retornado existe
-        if(not self.hasClass(obj._type,"justCheck")):
-            if(obj._type != "SELF_TYPE"):
-                self.addError(f"<{obj.line}> Method '{obj.name}' returns type '{obj._type}', but this type is not defined.")
-
-        cont = 1
-        # verificação dos parâmetros
-        for f in obj.formals:  
-            # estrutura de um parâmetro --> (_nameOfFormal,_typeOfFormal)
-            if(len([comp for comp in obj.formals if f == comp]) != 1): # verifica se parâmetro foi declarado mais de uma vez
-                self.addError(f"<{obj.line}> Formal '{f[0]}'(formal {cont}) was defined multiple times.")
-            
-            # verifica se tipo do parâmetro é inexistente
-            if(not self.hasClass(f[1], "justCheck")):
-                if(obj._type != "SELF_TYPE"):
-                    self.addError(f"<{obj.line}> Formal '{f[0]}'(formal {cont}) has type '{f[1]}', but this type is not defined.")
-            cont+=1
-
-    def checkAttribute(self, obj:TL.Attribute, _type:TL.Type, _id):
-        '''
-        Verificação sobre um atributo
-            - Se foi declarado mais de uma vez
-            - Se o tipo existe
-        '''
-        # Verifica de atributo foi declarado mais de uma vez
-        obj, qtd = self.typeListAnalyzer.getAttribute(_type.name,obj.name, _type, _id)
-        if(qtd > 1):
-            self.addError(f"<{obj.line}> Attribute '{obj.name}' was defined multiple times({qtd})")
-            
-        # Verifica se o tipo a ser retornado existe
-        if(not self.hasClass(obj._type, "justCheck")):
-            if(obj._type != "SELF_TYPE"):
-                self.addError(f"<{obj.line}> Attribute '{obj.name}' has type '{obj._type}', but this type is not defined.")
-
-
-    def hasClass(self, className, line = "*"):
-        '''
-        Dado o nome da classe, o método retorna se essa classe existe ou não no programa
-
-        Se a classe existir é retornada
-        Se não retorna False
-        '''
-        obj, _ = self.typeListAnalyzer.getClass(className)
-        if(not obj and line != "justCheck"):
-            self.addError(f"<{line}> Class '{className}' is not defined")
-        return obj
-
-    def hasMethod(self, className, methodName):
-        '''
-        Dado o nome da classe e do método, o método retorna se esse método existe ou não na classe nomeada
-        
-        Se o método existir é retornado
-        Se não retorna False
-        '''
-        _, obj = self.typeListAnalyzer.getClass(className)
-        if(not obj):
-            self.addError(f"<{obj.line}> Method '{className}' is not defined")
-        return obj
-
-
 # criar tabela hash para cada função
 def exprAnalyzer(expr: Node):
     """
@@ -197,17 +215,24 @@ def exprAnalyzer(expr: Node):
             * assignment: verificar se a variável já existe e verificar se o tipo corresponde ao tipo a ser retornado
     """
     if(expr.children == []):
+        if(expr._type in ['Bool', 'Int', 'String']):
+            return expr._type
+        elif(expr.getLabel() == tag.NEW):
+            pass
+        else:
+            # Caso não seja nenhum terminal, é possível que seja alguma expressão sem recursão
+            rType = eval(str(expr.getLabel().name)+"(expr)") 
+
         # se for ID
             # confere se ID existe (para isso vou precisar guardar o contexto (pilha?))
             # retorna tipo
         # confere se [e ]
         # retorna tipo (label)
-        pass
     else:
         for e in expr.children:
             rType = eval(str(e.getLabel().name)+"(e)")
 
-    return rType # retorna tipo
+        return rType # retorna tipo
 
 def exprMethodAnalyzer(methodExpr:Node):
     """
@@ -225,14 +250,17 @@ def attributeAnalyzer(attribute: Node):
     Análise de um atributo:
         - se foi preenchido, verificar se foi com o mesmo tipo com o cal foi
     '''
-    # verificar se TIPO do atributo existe
 
     # verificar se atributo é inicializado
     if(attribute.children == []): # se não
         pass
     else: # se sim
         rType = exprAnalyzer(attribute.children[0]) 
-       # verificar se tipo retornado corresponde ao tipo do atributo
+        
+        # verificar se tipo retornado corresponde ao tipo do atributo
+        if (not analyzer.compatibleType(attribute._type, rType)):
+            analyzer.addError(f"<{attribute.line}> '{attribute.getName()}' is defined as '{attribute._type}'. '{attribute._type}' can't be assigned with '{rType}'.")
+        
 
 def methodAnalyzer(method: Node):
     '''
@@ -248,6 +276,7 @@ def methodAnalyzer(method: Node):
             lastReturnedType = exprMethodAnalyzer(expr)   # guarda TIPO retornado
 
     lastReturnedType = "Int"
+
     # verificar se retorno da última expressão é o mesmo do declarado como retorno do método    
     if(method._type != lastReturnedType):
         analyzer.addError(f"<{method.getLine()}> '{method.getName()}' returns type '{method._type}', but the last expression returned type '{lastReturnedType}'")
@@ -257,40 +286,40 @@ def methodAnalyzer(method: Node):
 def classAnalyzer(root:Node):
     for _class in root: # análise de cada classe do programa
 
-        # Guardar cópia da estrutura da classe
+        # Guardar cópia da estrutura da classe atual
+        analyzer.push(analyzer.hasClass(_class.name))
         # Guardar cópia da classe herdade (se tiver)
-        analyzer.scope.append(analyzer.hasClass(_class.name))
-        analyzer.scope.append(analyzer.hasClass(_class.father))
-    
+        analyzer.push(analyzer.hasClass(_class.inherit))
+
         for feauture in _class.children: # análise de feautures
             if(feauture.getLabel() == tag.METHOD):
-                analyzer.scope.append(analyzer.hasMethod(_class.name, feauture.name)) # guarda cópia do método 
+                analyzer.push(analyzer.hasMethod(_class.name, feauture.name)) # guarda cópia do método 
                 methodAnalyzer(feauture)
             
             elif(feauture.getLabel() == tag.ATTRIBUTE): 
                 attributeAnalyzer(feauture)
 
 def preAnalyzer(typeList):
-    analyzer.hasClass("Main") # verificar se a Main foi declarada
-    analyzer.hasMethod("Main", "main") # verificar se a função main() foi declarada
+    if(analyzer.hasClass("Main")): # verificar se a Main foi declarada
+        analyzer.hasMethod("Main", "main") # verificar se a função main() foi declarada
 
     # Para cada tipo
     for t in analyzer.getTypes():
         # Verificação dos tipos
-        analyzer.checkType(t,t.scopeId)
+        analyzer.checkType(t)
         # Verificação dos métodos
         for m in t.methods:
-            analyzer.checkMethod(m, t, m.scopeId)
+            analyzer.checkMethod(m)
         # Verificação dos atributos
         for a in t.attributes:
-            analyzer.checkAttribute(a, t, a.scopeId)
+            analyzer.checkAttribute(a)
 
 def main(typeList, synTree):
     global analyzer
-    analyzer = Analyser(typeList)
+    analyzer = Analyzer(typeList)
 
     preAnalyzer(typeList)
-    # classAnalyzer(synTree)
+    classAnalyzer(synTree)
 
     with open("ERROSEMANTICO.txt", "w") as file:
         for e in analyzer.errs:
