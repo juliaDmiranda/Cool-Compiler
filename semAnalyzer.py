@@ -11,39 +11,51 @@ class Analyzer:
     classInheritedScope = 0 # guarda cópia da estrutura da classe
     currentlyScope      = 0
     typeListAnalyzer:TL.Creator
-    scope             = [] # no Id, por exemplo saber que foi um assgnment
-    '''
-    Se o contexto for um método guardar 
-    - adicionar id no método
-    '''
+    '''Contém lista de tipos gerada na análise sintática'''
+    scope             = [] 
+    '''Guarda estrutura do escopo (???) '''
+
     def __init__(self, typeList:TL.Creator):
         self.typeListAnalyzer = typeList
 
     def pop(self):
         self.scope.pop(0)
     def push(self, obj):
+        '''
+        SOBRE
+        -----
+        Guarda na estrutura escopo alguma estrutura
+        '''
         if not obj:
             pass
         else:
             self.scope.insert(0, obj)
+
     def addError(self, msg):
         self.errs.append(msg)
+
     def setScope(self, scope): # basicamente o id do pai
         self.currentlyScope = scope
+
     def getScope(self):
         return self.scope
-    def setContext(self, scope):
-        self.scope = scope
 
-
-    def getTypes(self): # retorna a lista de tipos
+    def getTypes(self):
+        '''
+        SOBRE
+        -----
+        Retorna a lista de tipos'''
         return self.typeListAnalyzer.typeList
 
     def checkType(self, obj:TL.Type): # informar se o tipo foi duplicado
-        '''
-        Verificações sobre uma classe:
-            - Foi declarada mais de uma vez
-            - Herda de uma classexiste
+        ''' 
+        SOBRE
+        -----
+        Método para verificações sobre a lista de tipos mapeada durante a análise sintática.
+        Quanto a classe, verifica-se:
+            - Se uma calsse de mesmo nome já foi declarada
+            - Se o tipo herdado pela classe existe
+            - Se não "herda" do tipo Bool ou Int ou String
         '''
         if(obj.duplicated): # veritica se o tipo é repetido
             if(obj.name.lower() in ['object','io','int','string','bool'] and obj.line!="BC"):
@@ -117,12 +129,12 @@ class Analyzer:
         Se não retorna False
         '''
         obj = self.typeListAnalyzer.getClass(className)
-        
-        if(not obj and line != "justCheck" and className != "-"):
+        # pra quÊ isso:  and className != "-"
+        if(not obj and className != "-"):
             self.addError(f"<{line}>{msg}Class '{className}' is not defined.")
         return obj
 
-    def hasMethod(self, className, methodName, line='*'):
+    def hasMethod(self, className, methodName, line=-1):
         '''
         Dado o nome da classe e do método, o método retorna se esse método existe ou não na classe nomeada
         
@@ -139,6 +151,7 @@ class Analyzer:
             return True
         else:
             return False
+
     def showScope(self, nodeName):
         print("Node",nodeName)
         for i in self.scope:
@@ -284,6 +297,13 @@ def methodAnalyzer(method: Node):
         
 
 def classAnalyzer(root:Node):
+    '''
+    SOBRE
+    -----
+
+    Função base para análise do programa. 
+    Para cada classe declarada, verifica-se seus métodos e atributos 
+    '''
     for _class in root: # análise de cada classe do programa
 
         # Guardar cópia da estrutura da classe atual
@@ -299,7 +319,12 @@ def classAnalyzer(root:Node):
             elif(feauture.getLabel() == tag.ATTRIBUTE): 
                 attributeAnalyzer(feauture)
 
-def preAnalyzer(typeList):
+def preAnalyzer():
+    '''
+    SOBRE
+    -----
+    A função realiza uma pré análise de tipos utilizando a estrutura de lista de tipos montada na análise sintática
+    '''
     if(analyzer.hasClass("Main")): # verificar se a Main foi declarada
         analyzer.hasMethod("Main", "main") # verificar se a função main() foi declarada
 
