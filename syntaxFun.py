@@ -805,13 +805,10 @@ def OPs_func(data, myTree):
                       |
                      expr   1 filho
     """
-    # cria raiz
-    tmp = st.Node()
-    tmp.children = []
-    tmp.setName(data[0].token.token)
-    tmp.setType(data[0].token.token)
-    tmp.setLine(data[0].token.line)
-    tmp.setLabel(st.tag.OPE)
+    myTree.setName(data[0].token.token)
+    myTree.setType(data[0].token.token)
+    myTree.setLine(data[0].token.line)
+    myTree.setLabel(st.tag.OPE)
 
     # Consumir token lido
     data[0].nexToken(PC.SIG.TokenFound)
@@ -819,11 +816,11 @@ def OPs_func(data, myTree):
     
     # cria Nnésimo filho 
     
-    data, tmp = expr(data, tmp) # chama expressão
+    data, myTree = expr(data, myTree) # chama expressão
 
-    data, tmp = expr_line(data, tmp) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+    data, myTree = expr_line(data, myTree) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
 
-    myTree.addChild(tmp)
+    # myTree.addChild(tmp)
 
     return  data, myTree
 
@@ -1018,6 +1015,7 @@ def ATTRIBUTE_func(data, myTree):
         data[0].nexToken(data[0].situation)
         if(data[0].situation == PC.SIG.EndOfProgram): return
         data, myTree = expr(data, myTree)
+        data, myTree = expr_line(data, myTree)
 
     data[1][1].newAttribute(_AttName,attType, myTree.getId(), myTree.line)
     return data, myTree
