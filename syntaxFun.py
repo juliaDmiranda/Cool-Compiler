@@ -38,11 +38,11 @@ def ATT_func(data, myTree):
 
     # cria filho 1
         
-    data, tmp = expr(data, tmp) # chama expressão
+    data, myTree = expr(data, myTree) # chama expressão
 
-    data, tmp = expr_line(data, tmp) # recursão à esquerda
+    data, myTree = expr_line(data, myTree) # recursão à esquerda
 
-    myTree.addChild(tmp)
+    # myTree.addChild(tmp)
     return data, myTree
 
 def ID_func(data, myTree):
@@ -83,9 +83,11 @@ def ID_func(data, myTree):
     
     # <-
     if(data[0].token.idEqual(Ids.ATT_ID)): # Verifica Atribuição
+        tmp.setLabel(st.tag.ASSIGNMENT)
         data, tmp = ATT_func(data, tmp)
     # ()
     elif(data[0].token.idEqual(Ids.O_PARENTHESIS)):
+        tmp.setLabel(st.tag.FUNCALLID)
         data, tmp = O_PARENTHESIS_func(data, tmp)
    
     if(tmp.children == None):
@@ -257,6 +259,7 @@ def LET_func(data, myTree):
     while True:
         # criar filho n
         aux = st.Node()
+        aux.children = []
         aux.setLabel(st.tag.LETOPT)
         aux.setName(data[0].token.token)
         aux.setLine(data[0].token.line)
@@ -333,6 +336,7 @@ def CASE_func(data, myTree):
     tmp = st.Node()
     tmp.children = []
     tmp.setLabel(st.tag.CASE)
+    tmp.setLine(data[0].token.line)
     tmp.setName(data[0].token.token)
 
     # Consome token lido
@@ -583,7 +587,10 @@ def O_PARENTHESIS_func(data, myTree):
     # cria raiz
     tmp = st.Node()
     tmp.children = []
-    tmp.setLabel(st.tag.PARENTHESIS)
+    if(myTree.getLabel() == st.tag.FUNCALLID):
+        tmp.setLabel(st.tag.ARGUMENT)
+    else:
+        tmp.setLabel(st.tag.PARENTHESIS)
     tmp.setLine(data[0].token.line)
     tmp.setName(data[0].token.token)
 
@@ -1038,22 +1045,22 @@ def formal(data):
         data, _nameOfFormal = checkToken_N_reportSyntError(f"line {data[0].token.line}: ID not founded. Formal expected",
         Ids.ID_ID, data, PC.SIG.IsFormal)
         if(data[0].situation == PC.SIG.EndOfProgram or data[0].situation == PC.SIG.TokenNotFound): 
-            return data
+            return data, _listOfFormals
         # verifica  :
         data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: ':' expected in formal structure",
         Ids.COLON_ID, data)
-        if(data[0].situation == PC.SIG.EndOfProgram): return data
+        if(data[0].situation == PC.SIG.EndOfProgram): return data, _listOfFormals
 
         # verifica  TYPE
         data, _typeOfFormal = checkToken_N_reportSyntError(f"line {data[0].token.line}: TYPE expected",
         Ids.TYPE_ID, data) 
-        if(data[0].situation == PC.SIG.EndOfProgram): return data
+        if(data[0].situation == PC.SIG.EndOfProgram): return data, _listOfFormals
 
         _listOfFormals.append((_nameOfFormal,_typeOfFormal))
         if(not data[0].token.idEqual(Ids.COMMA_ID)):
             break
         data[0].nexToken(data[0].situation) # pula o { encontrado extra pois terá mais de uma expressão
-        if(data[0].situation == PC.SIG.EndOfProgram): return data
+        if(data[0].situation == PC.SIG.EndOfProgram): return data, _listOfFormals
     return data, _listOfFormals
     
 def METHOD_func(data, myTree:st.Node):#oi
