@@ -10,6 +10,8 @@ class Feature():
     """
     name = ""
     _type = None
+    line = 0
+    duplicated  = False # informa se a feauture já foi definido antes e está repetido
 
     def __init__(self, _name, _type) -> None:
         self.setName(_name)
@@ -44,9 +46,9 @@ class Method(Feature):
     qtdFormal   = 0
     scopeId     = 0
     node        = None
-
-    def __init__(self, _name, _Type, _formals,line, _id):
+    def __init__(self, _name, _Type, _formals,line, _id, duplicated=False):
         super().__init__(_name, _Type)
+        self.duplicated = duplicated
         self.scopeId = _id
         self.formals = _formals
         self.qtdFormal = len(self.formals)
@@ -56,6 +58,8 @@ class Method(Feature):
         print(f"(M) {self.name}-{self._type}")
         if(self.formals != []):
             print(str(self.formals))
+
+
     def toTree(self, noden):
         self.node = noden
 
@@ -67,13 +71,15 @@ class Attribute(Feature):
     node    = None
     line    = 0
     scopeId = 0
-    def __init__(self, _name, _type, line, _id) -> None:
+    def __init__(self, _name, _type, line, _id, duplicated = False) -> None:
         super().__init__(_name, _type)
         self.scopeId = _id
         self.line    = line
+        self.duplicated = duplicated
 
     def show(self):
         print("(A) " + super().__str__())
+
     def toTree(self, noden):
         self.node = noden
 
@@ -85,7 +91,8 @@ class Type():
     methods     = []    
     attributes  = []
     scopeId     = 0 
-
+    duplicated  = False
+    
     def __init__(self, _name, _id,line, _parent = ""):
         self.name   = _name
         if(_parent != ""): self.parent = _parent
@@ -93,12 +100,47 @@ class Type():
         self.line = line
 
     def newMethod(self,name, _type, _formals,line, scope_id):
-        # print(len(self.methods))
-        self.methods.append(Method(name, _type, _formals,line, scope_id))
+        # verifica se o método já foi definido
+        if(len([x for x in self.methods if name == x.name])!=0): # checar se já foi definida feauture com esse nome
+            self.methods.append(Method(name, _type, _formals,line, scope_id, True))
+        else:
+            self.methods.append(Method(name, _type, _formals,line, scope_id))
+    
+    def alreadyDefined(self):
+        self.duplicated = True
 
     def newAttribute(self, name, _type, line, _id):
-        self.attributes.append(Attribute(name, _type, line, _id))
+        if(len([x for x in self.attributes if name == x.name])!=0):  # checar se já foi definida feauture com esse nome
+            self.attributes.append(Attribute(name, _type, line, _id, True))
+        else:
+            self.attributes.append(Attribute(name, _type, line, _id))
+    def getMethod(self, methodName):
+        '''
+        Parâmetro:
+        ----------
+        * name: nome da classe 
 
+        Retorno
+        -------
+        * [] -> se o método não existe (False)
+        * [Method] -> see o método existe
+        '''
+        return [m for m in self.methods if methodName == m.name]
+    def getAttribute(self, attributeName):
+        '''
+        Parâmetro:
+        ----------
+        * name: nome da classe 
+
+        Retorno
+        -------
+        * [] -> se o atributo não existe (False)
+        * [Attribute] -> see o atributo existe
+        '''
+        return [a for a in self.attributes if attributeName == a.name]
+
+        
+        
     def show(self):
         print(f"(T) {self.name}({self.parent})")
         
@@ -141,8 +183,13 @@ class Creator():
     '''
 
     typeList = [Object_class, IO_class, Int_class, String_class, Bool_class]
-    def addType(self, obj:Feature):
-        self.typeList.append(obj)
+    
+    def addType(self, obj:Type):
+        if(len([x for x in self.typeList if obj.name == x.name])!=0):
+            obj.alreadyDefined()
+            self.typeList.append(obj)
+        else:
+            self.typeList.append(obj)
 
     def printTypes(self):
         os.system("PAUSE")
@@ -159,54 +206,31 @@ class Creator():
             print(f" len == {len([_type.name for _type in self.typeList if _type.name.lower() == obj.name.lower()])}")
             False
 
-    def getClass(self, name, _id=False): # retorna quantas vezes a classe foi encontrada e o objeto inteiro
-        cont = 0
-        rtn  = False 
-        for _type in self.typeList:
-            if(_type.name == name):
-                cont+=1
-                if (not _id):
-                    rtn = _type
-                else:
-                    if(_type.scopeId == _id):
-                        rtn = _type
-        return  rtn, cont
+    def getClass(self, name, _id=-1): # retorna quantas vezes a classe foi encontrada e o objeto inteiro
+        '''
+        Parâmetro:
+        ----------
+        * name: nome da classe 
+        
+        Retorno
+        -------
+        * [] -> se o tipo não existe (False)
+        * [Type] -> se o tipo existe
 
-    def getMethod(self, name,classNameOrObj = "", _id= False):
-        if(classNameOrObj != "" and isinstance(classNameOrObj,str)):
-            obj, _ = self.getClass(classNameOrObj) # retorna a estrutura da classe onde o methodo está
-        else:
-            obj = classNameOrObj
-        cont = 0
-        rtn  = False
+        '''
+        # cont = 0
+        # rtn  = False 
+        # for _type in self.typeList:
+        #     if(_type.name == name):
+        #         cont+=1
+        #         if (not _id):
+        #             rtn = _type
+        #         else:
+        #             if(_type.scopeId == _id):
+        #                 rtn = _type
+        # return  rtn, cont
 
-        for m in obj.methods: # procura o método
-            if(m.name == name):
-                cont+=1
-                if (not _id):
-                    rtn = m
-                else:
-                    if(m.scopeId == _id):
-                        rtn = m
-
-        return rtn, cont
-
-    def getAttribute(self, className, name, obj = None, _id=False):
-        if(obj == None):
-            obj, _ = self.getClass(className) # retorna a estrutura da classe onde o atributo está
-        cont = 0
-        rtn  = False
-
-        for a in obj.attributes: # procura o método
-            if(a.name == name):
-                cont+=1
-                if (not _id):
-                    rtn = a
-                else:
-                    if(a.scopeId == _id):
-                        rtn = a
-
-        return rtn, cont
+        return [c for c in self.typeList if name == c.name]
 
     def hasID():
         '''
