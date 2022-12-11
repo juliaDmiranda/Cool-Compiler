@@ -1,3 +1,4 @@
+import os
 from synTree import Node, tag
 import TYPE_LIST as TL
 
@@ -123,28 +124,58 @@ class Analyzer:
 
     def hasClass(self, className, line = "*", msg = " "):
         '''
-        Dado o nome da classe, o método retorna se essa classe existe ou não no programa
+        SOBRE
+        -----
+        Verifica se uma classe existe.
+        Casos em expressões:
+            - let
+            - Chamada de funções
+            - case
+            - new
 
-        Se a classe existir é retornada
-        Se não retorna False
+        PARÂMETRO
+        ----------
+        - className: nome da classe
+        - line: linha de possível erro
+        - mensagem personalizada
+        
+        RETORNO
+        -------
+        - [] :  Se a classe não existe
+        - obj:  Se a classe existe
         '''
         obj = self.typeListAnalyzer.getClass(className)
+
         # pra quÊ isso:  and className != "-"
         if(not obj and className != "-"):
             self.addError(f"<{line}>{msg}Class '{className}' is not defined.")
-        return obj
+            return obj
+
+        return obj[0]
 
     def hasMethod(self, className, methodName, line=-1):
         '''
-        Dado o nome da classe e do método, o método retorna se esse método existe ou não na classe nomeada
+        SOBRE
+        -----
+        Verifica se um método existe no escopo procurado
+
+        PARÂMETRO
+        ----------
+        - className: nome da classe
+        - methodName: nome do método
+        - line: linha de possível erro
         
-        Se o método existir é retornado
-        Se não retorna False
+        RETORNO
+        -------
+        - []:    Se o método não existe
+        - obj: Se não retorna False
         '''
         obj = self.typeListAnalyzer.getClass(className)[0].getMethod(methodName)
         if(not obj):
             self.addError(f"<{line}> Method '{methodName}' is not defined.")
-        return obj
+            return obj
+
+        return obj[0]
 
     def compatibleType(self,_type, rType):
         if(_type == rType):
@@ -161,8 +192,18 @@ def ATTRIBUTE   (e:Node):
     pass
 def ARGUMENT    (e:Node):
     pass
-def BRACKETS    (e:Node):
-    pass
+
+def MULTEXPR(e:Node):
+    for expr in e.children:
+        if(expr._type in ['Bool', 'Int', 'String'] or expr.getLabel() == tag.NEW):
+            rType = expr._type
+        else:
+            # Caso não seja nenhum terminal, é possível que seja alguma expressão sem recursão
+            rType = eval(str(expr.getLabel().name)+"(expr)")  
+            # rType = exprAnalyzer(expr) # Funciona com essa chamda também
+
+    return rType
+
 def BOOL        (e:Node):
     pass
 def CLASS       (e:Node):
@@ -199,8 +240,6 @@ def LETOPT      (e:Node):
     pass
 def METHOD      (e:Node):
     pass
-def MULTEXPR    (e:Node):
-    pass
 def NEW         (e:Node):
     pass
 def NOT         (e:Node):
@@ -221,31 +260,36 @@ def WHILE       (e:Node):
 # criar tabela hash para cada função
 def exprAnalyzer(expr: Node):
     """
-    Retorna um TIPO (string ou node?)
-
-    - Casos especiais de atenção:
+    SOBRE
+    -----
+    A função do método é verificar as expressões quanto:
+        - ao escopo
+        - retorno de tipo
+        - Casos especiais de atenção:
             * let [declaração de novas variáveis] : adicionar novas variáveis como formals no método
             * assignment: verificar se a variável já existe e verificar se o tipo corresponde ao tipo a ser retornado
+    PARÂMETRO
+    ---------
+    - expr: objeto do tipo Node que contém estrutura a ser verificada
+
+    RETORNO
+    -------
+    - A função retorna um TIPO do resultado da expressão (string ou node?)
     """
     if(expr.children == []):
-        if(expr._type in ['Bool', 'Int', 'String']):
+        if(expr._type in ['Bool', 'Int', 'String'] or expr.getLabel() == tag.NEW):
             return expr._type
-        elif(expr.getLabel() == tag.NEW):
-            pass
         else:
             # Caso não seja nenhum terminal, é possível que seja alguma expressão sem recursão
             rType = eval(str(expr.getLabel().name)+"(expr)") 
-
-        # se for ID
-            # confere se ID existe (para isso vou precisar guardar o contexto (pilha?))
-            # retorna tipo
-        # confere se [e ]
-        # retorna tipo (label)
     else:
         for e in expr.children:
-            rType = eval(str(e.getLabel().name)+"(e)")
+            if(e._type in ['Bool', 'Int', 'String'] or e.getLabel() == tag.NEW):
+                rType = e._type
+            else: 
+                rType = eval(f"{str(e.getLabel().name)}(e)") # pega nome da tag e faz xhamada da função específica
 
-        return rType # retorna tipo
+    return rType # retorna tipo
 
 def exprMethodAnalyzer(methodExpr:Node):
     """
@@ -260,19 +304,29 @@ def exprMethodAnalyzer(methodExpr:Node):
 
 def attributeAnalyzer(attribute: Node):
     '''
-    Análise de um atributo:
-        - se foi preenchido, verificar se foi com o mesmo tipo com o cal foi
+    SOBRE
+    -----
+    Função base de análise de tipo para uma tributo.
+    Dado um atributo, verifica-se se o tipo retornado corresponde ao tipo declarado.
+
+    PARÂMETRO
+    ---------
+    - attribute: objeto do tipo Node, atributo a ser analisado
     '''
 
     # verificar se atributo é inicializado
     if(attribute.children == []): # se não
         pass
     else: # se sim
-        rType = exprAnalyzer(attribute.children[0]) 
+        # os.system("CLS")
+        print("<attributeAnalyzer>",attribute.children[0])
+        # os.system("PAUSE")
+        # os.system("CLS")
         
+        rType = exprAnalyzer(attribute.children[0]) 
         # verificar se tipo retornado corresponde ao tipo do atributo
-        if (not analyzer.compatibleType(attribute._type, rType)):
-            analyzer.addError(f"<{attribute.line}> '{attribute.getName()}' is defined as '{attribute._type}'. '{attribute._type}' can't be assigned with '{rType}'.")
+        if (not analyzer.compatibleType(attribute._type, rType)): # depois por mensagem já no método de uma vez, só muda a mensagem de erro
+            analyzer.addError(f"<{attribute.line}> '{attribute.getName()}' is defined as '{attribute._type}'. '{attribute._type}' is not assignable to '{rType}'.")
         
 
 def methodAnalyzer(method: Node):
@@ -308,8 +362,10 @@ def classAnalyzer(root:Node):
 
         # Guardar cópia da estrutura da classe atual
         analyzer.push(analyzer.hasClass(_class.name))
-        # Guardar cópia da classe herdade (se tiver)
-        analyzer.push(analyzer.hasClass(_class.inherit))
+        
+        if(_class.inherit != "-"):
+            # Guardar cópia da classe herdade (se tiver)
+            analyzer.push(analyzer.hasClass(_class.inherit))
 
         for feauture in _class.children: # análise de feautures
             if(feauture.getLabel() == tag.METHOD):
@@ -343,7 +399,7 @@ def main(typeList, synTree):
     global analyzer
     analyzer = Analyzer(typeList)
 
-    preAnalyzer(typeList)
+    preAnalyzer()
     classAnalyzer(synTree)
 
     with open("ERROSEMANTICO.txt", "w") as file:
