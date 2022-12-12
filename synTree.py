@@ -25,7 +25,9 @@ class tag (Enum):
     MULTEXPR    = auto()
     NEW         = auto()
     NOT         = auto()
-    OPE         = auto()
+    OPE         = auto() # VER SE PRECISA DEPOIS
+    INTOP       = auto()
+    BOOLOP      = auto()
     PARENTHESIS = auto()
     ASSIGNMENT  = auto()
     STRING      = auto()
