@@ -5,6 +5,22 @@ import TYPE_LIST as TL
 global TYPE_LIST
 TYPE_LIST = []
 
+def findComplement(num):
+    ans = 0;
+    x = 0;
+    i = 0;
+    while(num > 0):
+        if (num % 2 == 1):
+            x = 0;
+        else:
+            x = 1;
+ 
+        ans += pow(2, i) * x;
+        num //= 2;
+        i += 1;
+ 
+    return ans;
+
 class Analyzer:
     setSelf_type = False 
     errs = []
@@ -75,7 +91,21 @@ class Analyzer:
                 self.addError(f"<{obj.line}> It isn't allowed to inherit from '{obj.parent}' type.")
             if(not self.typeListAnalyzer.getClass(obj.parent)):
                 self.addError(f"<{obj.line}> Class '{obj.name}' inherits class '{obj.parent}', but this class is not defined.")
-
+    
+    def getResult(self, op, x, y = 0):
+        if(self.computeResult):
+            x = True if x == "true" else False if x == "false" else x
+            y = True if y == "true" else False if y == "false" else y
+            if(op == "="): op = "=="
+            elif(op == "/"): op = "//"
+            if(op == "not"):
+                self.lastValue =  not x
+            elif(op=="~"):
+                self.lastValue =  findComplement(int(x))
+            else:
+                # print(f">>>>>>>>> eval({x} {op} {y})")
+                # print(">>>>>>>>>",eval(f"{x} {op} {y}"))
+                self.lastValue = eval(f"{x} {op} {y}")
     def checkMethod(self, obj:TL.Method): 
         '''
         SOBRE
