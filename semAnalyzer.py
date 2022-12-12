@@ -22,23 +22,24 @@ def findComplement(num):
     return ans;
 
 class Analyzer:
-    setSelf_type = False 
-    errs = []
-    classScope          = 0 # guarda cópia da estrutura da classe
-    classInheritedScope = 0 # guarda cópia da estrutura da classe
-    currentlyScope      = 0
     typeListAnalyzer:TL.Creator
-    blockComparation = False # Quando dá algum erro de retorno
-    computeResult    = False   # se estiver eme alguma estrutura que depende do resultaod de um cálculo (ex: if)
-    resultOfExpression  = None # resultado da expressão calculada
-    lastValue           = 0  # resultaod anterior de alguma expressão
+    errs = [] # lista de erros semânticos encontrados ao longo da anáalise
+
+    ''' Para análise de escopo'''
+    classScope          = 0  # guarda índice da classe ondee está ocorrendo a análise
+    classInheritedScope = -1 # guarda índice da classe herdada
+    methodScope         = 0  # guarda índice do método onde está ocorrendo a análise
     
-    lastTypeReturned = ''
-    '''Contém lista de tipos gerada na análise sintática'''
-    scope             = [] 
-    '''Guarda estrutura do escopo (???) 
-        Penso em ser só o id da classe onde estão ocorrendo as análises e da classe herdada classe herdade
-    '''
+    ''' outros '''
+    computeResult    = False   # se estiver eme alguma estrutura que depende do resultaod de um cálculo (ex: if)
+    lastValue           = 0  # resultaod anterior de alguma expressão
+    lastTypeReturned = '' # Contém lista de tipos gerada na análise sintática
+    
+    ''' Talvez saia'''
+    resultOfExpression  = None # resultado da expressão calculada
+    setSelf_type = False 
+    blockComparation = False # Quando dá algum erro de retorno
+    scope             = [] # Guarda estrutura do escopo (???)        Penso em ser só o id da classe onde estão ocorrendo as análises e da classe herdada classe herdade
 
     def __init__(self, typeList:TL.Creator):
         self.typeListAnalyzer = typeList
@@ -59,8 +60,18 @@ class Analyzer:
     def addError(self, msg):
         self.errs.append(msg)
 
-    def setScope(self, scope): # basicamente o id do pai
-        self.currentlyScope = scope
+    def setScope(self, classI, methodI = -1): # basicamente o id do pai
+        # seta índice da classe atual
+        self.classScope = classI
+        print("class ", self.classScope   )
+        
+        if (self.getTypes()[classI].parent != ""): # (se herda de alguma classe) seta índice do parente da classe atual
+            self.classInheritedScope =  [self.typeListAnalyzer.typeList.index(c) for c in self.typeListAnalyzer.typeList if c.name == self.typeListAnalyzer.typeList[classI].parent][0]
+            print("PARENT ", self.classInheritedScope)
+        # seta índice do método
+        self.methodScope = methodI
+        print("method ", self.methodScope   )
+        os.system("PAUSE")
 
     def getScope(self):
         return self.scope
@@ -393,7 +404,8 @@ def ASSIGNMENT  (e:Node):
 
 
 def ID(e:Node):
-    # procurar se atrobuto existe no escopo (classe)
+    # procurar se atributo existe no escopo (classe)
+    
     # Procura nos atributos classe atual
     # Proocura nos formals do método atual
     
@@ -405,7 +417,7 @@ def ID(e:Node):
     # se achado: seta como últimos Tipo e valor encontrados
     # retorna esses valores
     pass
-# criar tabela hash para cada função
+
 def exprAnalyzer(expr: Node):
     """
     SOBRE
@@ -424,17 +436,20 @@ def exprAnalyzer(expr: Node):
     -------
     - A função retorna um TIPO do resultado da expressão (string ou node?)
     """
-    if(expr.getLabel() == tag.ISVOID):
+    if(expr.getLabel() == tag.ISVOID): # N'ao sei o que fazer 
         for e in expr.children:
             rType = exprAnalyzer(e)
         print(">>>>>>>>>> ",analyzer.lastTypeReturned)
         print(">>>>>>>>>> ",rType)
-        
         return expr._type
+   
     elif(expr.getLabel() in [tag.BOOL, tag.INTEGER, tag.STRING] or expr.getLabel() == tag.NEW):
         analyzer.lastTypeReturned = expr._type
-        if(not expr.getLabel() == tag.NEW):
+        if(not expr.getLabel() == tag.NEW): # dá atençaõe special ao new que mexerá com tipos
             analyzer.lastValue = expr.name
+        else: # checagem do tipo
+            not analyzer.hasClass(expr._type, expr.getLine())
+
         if(expr.children!=[]):
             for e in expr.children:
                 rType = exprAnalyzer(e)
@@ -509,8 +524,7 @@ def classAnalyzer(root:Node):
     Função base para análise do programa. 
     Para cada classe declarada, verifica-se seus métodos e atributos 
     '''
-    for _class in root: # análise de cada classe do programa
-
+    for j, _class in enumerate(root): # análise de cada classe do programa
         # Guardar cópia da estrutura da classe atual
         analyzer.push(analyzer.hasClass(_class.name))
         
@@ -518,14 +532,14 @@ def classAnalyzer(root:Node):
             # Guardar cópia da classe herdade (se tiver)
             analyzer.push(analyzer.hasClass(_class.inherit))
 
-        for feauture in _class.children: # análise de feautures
+        for i, feauture in enumerate(_class.children): # análise de feautures
             if(feauture.getLabel() == tag.METHOD):
+                analyzer.setScope(j+5, i)
                 analyzer.push(analyzer.hasMethod(_class.name, feauture.name)) # guarda cópia do método 
                 methodAnalyzer(feauture)
-            
             elif(feauture.getLabel() == tag.ATTRIBUTE): 
+                analyzer.setScope(j+5)
                 attributeAnalyzer(feauture)
-
 def preAnalyzer():
     '''
     SOBRE
