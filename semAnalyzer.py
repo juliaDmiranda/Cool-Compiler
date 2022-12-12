@@ -12,6 +12,7 @@ class Analyzer:
     classInheritedScope = 0 # guarda cópia da estrutura da classe
     currentlyScope      = 0
     typeListAnalyzer:TL.Creator
+    lastTypeReturned = ''
     '''Contém lista de tipos gerada na análise sintática'''
     scope             = [] 
     '''Guarda estrutura do escopo (???) '''
@@ -153,7 +154,7 @@ class Analyzer:
 
         return obj[0]
 
-    def hasMethod(self, className, methodName, line=-1):
+    def hasMethod(self, className, methodName, line="*"):
         '''
         SOBRE
         -----
@@ -246,6 +247,20 @@ def NOT         (e:Node):
     pass
 def OPE         (e:Node):
     pass
+def BOOLOP         (e:Node):
+    pass
+def INTOP         (e:Node):
+    '''
+    SOBRE
+    -----
+    Função para verificação de expressão de operações matemáticas +,-,/,*    
+    Deverá ser verificado:
+     - Se o tipo retornado da expressão expr em -> expr<OP> é do tipo Int
+     - Se o tipo retornado da expr em --> <OP>expr é do tipo Int
+    '''
+    pass
+
+    # return rType
 def PARENTHESIS (e:Node):
     pass
 def ASSIGNMENT  (e:Node):
@@ -318,13 +333,9 @@ def attributeAnalyzer(attribute: Node):
     if(attribute.children == []): # se não
         pass
     else: # se sim
-        # os.system("CLS")
-        print("<attributeAnalyzer>",attribute.children[0])
-        # os.system("PAUSE")
-        # os.system("CLS")
-        
-        rType = exprAnalyzer(attribute.children[0]) 
-        # verificar se tipo retornado corresponde ao tipo do atributo
+        for c in attribute.children:
+            rType = exprAnalyzer(attribute.children[0]) 
+            # verificar se tipo retornado corresponde ao tipo do atributo
         if (not analyzer.compatibleType(attribute._type, rType)): # depois por mensagem já no método de uma vez, só muda a mensagem de erro
             analyzer.addError(f"<{attribute.line}> '{attribute.getName()}' is defined as '{attribute._type}'. '{attribute._type}' is not assignable to '{rType}'.")
         
@@ -348,7 +359,6 @@ def methodAnalyzer(method: Node):
     if(method._type != lastReturnedType):
         analyzer.addError(f"<{method.getLine()}> '{method.getName()}' returns type '{method._type}', but the last expression returned type '{lastReturnedType}'")
 
-        
 
 def classAnalyzer(root:Node):
     '''
