@@ -1,6 +1,4 @@
-import os
-
-
+import os 
 class Feature():
     """
     Classe responsável por armazenar informações de uma feature
@@ -218,17 +216,6 @@ class Creator():
         * [Type] -> se o tipo existe
 
         '''
-        # cont = 0
-        # rtn  = False 
-        # for _type in self.typeList:
-        #     if(_type.name == name):
-        #         cont+=1
-        #         if (not _id):
-        #             rtn = _type
-        #         else:
-        #             if(_type.scopeId == _id):
-        #                 rtn = _type
-        # return  rtn, cont
 
         return [c for c in self.typeList if name == c.name]
 
