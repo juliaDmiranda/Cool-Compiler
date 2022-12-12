@@ -1,3 +1,4 @@
+from ast import Expression
 import os
 from Id import Ids
 import Program_class as PC
@@ -747,17 +748,14 @@ def AT_func(data, myTree):
         * une em um nó só? Não, pois ID terá outros filhos
     """
     # cria raiz
-    tmp = st.Node()
-    tmp.children = []
-    tmp.setLabel(st.tag.FUNCALL)
-    tmp.setLine(data[0].token.line)
+    myTree.setLine(data[0].token.line)
 
     # Consumir token lido
     data[0].nexToken(PC.SIG.TokenFound)
     if(data[0].situation == PC.SIG.EndOfProgram): return data
 
-    tmp.setName(data[0].token.token)
-    tmp.setType(data[0].token.token)
+    myTree.setName(data[0].token.token)
+    myTree.setType(data[0].token.token)
     # verificar TYPE
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: TYPE expected in expression expr[@TYPE]...",
     Ids.TYPE_ID, data)
@@ -775,9 +773,8 @@ def AT_func(data, myTree):
         # retornar ao anterior para poder dar next 
         # na função DOT_func(data) sem afetar o programa
         
-    data, tmp = DOT_func(data, tmp) # passar o trabalho para outra função que irá fazer a mesma coisa
+    data, myTree = DOT_func(data, myTree) # passar o trabalho para outra função que irá fazer a mesma coisa
     
-    myTree.addChild(tmp)
     return data, myTree
 
 def OPs_func(data, myTree):
@@ -806,9 +803,7 @@ def OPs_func(data, myTree):
                      expr   1 filho
     """
     myTree.setName(data[0].token.token)
-    myTree.setType(data[0].token.token)
     myTree.setLine(data[0].token.line)
-    myTree.setLabel(st.tag.OPE)
 
     # Consumir token lido
     data[0].nexToken(PC.SIG.TokenFound)
@@ -816,7 +811,7 @@ def OPs_func(data, myTree):
     
     # cria Nnésimo filho 
     
-    data, myTree = expr(data, myTree) # chama expressão
+    data, myTree = expr(data, myTree, True) # chama expressão
 
     data, myTree = expr_line(data, myTree) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
 
@@ -849,13 +844,22 @@ def expr_line(data, myTree):
     foundexpl = False
     while True:
         # modificados para remover recursão a esquerda # +, -, *, /, <, <=, =
-        if(data[0].token.idEqual(Ids.PLUS_ID) or data[0].token.idEqual(Ids.MINUS_ID) or data[0].token.idEqual(Ids.ASTERISK_ID) or data[0].token.idEqual(Ids.F_SLASH_ID) or data[0].token.idEqual(Ids.LESS_THAN_ID) or data[0].token.idEqual(Ids.LESS_THAN_EQUAL_TO_ID) or data[0].token.idEqual(Ids.EQUAL_TO_ID)):
+        if(data[0].token.idEqual(Ids.PLUS_ID) or data[0].token.idEqual(Ids.MINUS_ID) or data[0].token.idEqual(Ids.ASTERISK_ID) or data[0].token.idEqual(Ids.F_SLASH_ID)):
+            tmp.setLabel(st.tag.INTOP)
+            tmp.setType("Int")
+            foundexpl = True
+            data, tmp = OPs_func(data, tmp)
+        elif(data[0].token.idEqual(Ids.LESS_THAN_ID) or data[0].token.idEqual(Ids.LESS_THAN_EQUAL_TO_ID) or data[0].token.idEqual(Ids.EQUAL_TO_ID)):
+            tmp.setType("Bool")
+            tmp.setLabel(st.tag.BOOLOP)
             foundexpl = True
             data, tmp = OPs_func(data, tmp)
         elif(data[0].token.idEqual(Ids.AT_ID)): # concerteza ao ter um @ terá de ter TYPE.ID depois
             foundexpl = True
+            tmp.setLabel(st.tag.FUNCALL)
             data, tmp = AT_func(data, tmp)
         elif(data[0].token.idEqual(Ids.DOT_ID)): # concerteza ao ter um . terá de ter ID depois
+            tmp.setLabel(st.tag.FUNCALL)
             foundexpl = True
             data, tmp = DOT_func(data, tmp)
         else:
@@ -867,7 +871,7 @@ def expr_line(data, myTree):
 
     return data, myTree
        
-def expr(data, myTree):
+def expr(data, myTree, setErr=False):
     """
     SOBRE
     -------------
@@ -881,7 +885,11 @@ def expr(data, myTree):
     momento (expr + expr, por exemplo) que será tratada pela função expr_line
     PARÂMETROS
     -------------
-    - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica
+    - data: lista que contém classe de manipulação de tokens, lista de tipos
+    - myTree: árvore semântica
+    - setRtt: Para casos de expressões com recursão à esquerda. Por essa variável sabe-se se está esperando obrigatoriamente um expressão à direita.
+              \nÉ setada novamente a Falso caso entre em alguma função evitando que errôneamente se conclua que não foi encontrada nenhuma expressão
+
     RETORNO
     -------------
     - data: lista que contém classe de manipulação de tokens, lista de tipos e árvore semântica modificados
@@ -916,29 +924,53 @@ def expr(data, myTree):
 
     # Recursões a direita
     
-    if(data[0].token.idEqual(Ids.ID_ID)):  data, myTree = ID_func(data, myTree) #ID
+    if(data[0].token.idEqual(Ids.ID_ID)):  
+        data, myTree = ID_func(data, myTree) #ID
+        setErr = False
+    if(data[0].token.idEqual(Ids.IF_ID)):  
+        data, myTree = IF_func(data, myTree) #IF
+        setErr = False
     
-    if(data[0].token.idEqual(Ids.IF_ID)):  data, myTree = IF_func(data, myTree) #IF
+    if(data[0].token.idEqual(Ids.WHILE_ID)): 
+        data, myTree= WHILE_func(data, myTree) #WHILE
+        setErr = False
     
-    if(data[0].token.idEqual(Ids.WHILE_ID)): data, myTree= WHILE_func(data, myTree) #WHILE
+    if(data[0].token.idEqual(Ids.LET_ID)): 
+        data, myTree = LET_func(data, myTree) #LET
+        setErr = False
     
-    if(data[0].token.idEqual(Ids.LET_ID)): data, myTree = LET_func(data, myTree) #LET
+    if(data[0].token.idEqual(Ids.CASE_ID)): 
+        data, myTree = CASE_func(data, myTree) #CASE
+        setErr = False
     
-    if(data[0].token.idEqual(Ids.CASE_ID)): data, myTree = CASE_func(data, myTree) #CASE
+    if(data[0].token.idEqual(Ids.NEW_ID)): 
+        data, myTree = NEW_func(data, myTree) #NEW
+        setErr = False
     
-    if(data[0].token.idEqual(Ids.NEW_ID)): data, myTree = NEW_func(data, myTree) #NEW
+    if(data[0].token.idEqual(Ids.ISVOID_ID)): 
+        data, myTree = ISVOID_func(data, myTree) #ISVOID
+        setErr = False
     
-    if(data[0].token.idEqual(Ids.ISVOID_ID)): data, myTree = ISVOID_func(data, myTree) #ISVOID
-    
-    if(data[0].token.idEqual(Ids.NOT_ID)): data, myTree = NOT_func(data, myTree) #NOT
+    if(data[0].token.idEqual(Ids.NOT_ID)): 
+        data, myTree = NOT_func(data, myTree) #NOT
+        setErr = False
         
-    if(data[0].token.idEqual(Ids.TIDE_ID)): data, myTree = TIDE_func(data, myTree) #NOT
+    if(data[0].token.idEqual(Ids.TIDE_ID)): 
+        setErr = False
+        data, myTree = TIDE_func(data, myTree) #NOT
     
     if(data[0].token.idEqual(Ids.O_PARENTHESIS)): 
+        setErr = False
         data, myTree = O_PARENTHESIS_func(data, myTree) #(
 
-    if(data[0].token.idEqual(Ids.O_BRACKETS)): data, myTree = O_BRACKETS_func(data, myTree)  #{
+    if(data[0].token.idEqual(Ids.O_BRACKETS)): 
+        setErr = False
+        data, myTree = O_BRACKETS_func(data, myTree)  #{
 
+    else:
+        if(setErr):
+            data[0].setPs_err(f"line {data[0].token.line}: Expression expected.")
+            data[0].addError()
     return data, myTree
 
 def checkToken_N_reportSyntError(errSTR, ID_comp, data, isFormal = False):
@@ -1234,7 +1266,7 @@ def CLASS_func (data):
             tmp.addChild(child) # adiciona subárvore retornada
             
             # verifica ;
-            data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:" + " ';'" + f" expected in the end of a feature on {data[0].token.token}",
+            data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}:" + " ';'" + f" expected in the end of a feature.",
             Ids.SEMICOLON_ID, data)
             if(data[0].situation == PC.SIG.EndOfProgram): return data
             
