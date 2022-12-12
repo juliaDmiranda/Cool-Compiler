@@ -28,14 +28,17 @@ class Analyzer:
     classInheritedScope = 0 # guarda cópia da estrutura da classe
     currentlyScope      = 0
     typeListAnalyzer:TL.Creator
-    blockComparation = False
-    '''
-    Quando dá algum erro de retorno
-    '''
+    blockComparation = False # Quando dá algum erro de retorno
+    computeResult    = False   # se estiver eme alguma estrutura que depende do resultaod de um cálculo (ex: if)
+    resultOfExpression  = None # resultado da expressão calculada
+    lastValue           = 0  # resultaod anterior de alguma expressão
+    
     lastTypeReturned = ''
     '''Contém lista de tipos gerada na análise sintática'''
     scope             = [] 
-    '''Guarda estrutura do escopo (???) '''
+    '''Guarda estrutura do escopo (???) 
+        Penso em ser só o id da classe onde estão ocorrendo as análises e da classe herdada classe herdade
+    '''
 
     def __init__(self, typeList:TL.Creator):
         self.typeListAnalyzer = typeList
@@ -223,101 +226,101 @@ class Analyzer:
         for i in self.scope:
             print("i>>> ",i)
 
-def ATTRIBUTE   (e:Node):
-    pass
-def ARGUMENT    (e:Node):
-    pass
-
+# Implementadas
 def MULTEXPR(e:Node):
     for expr in e.children:
         if((expr._type in ['Bool', 'Int', 'String'] or expr.getLabel() == tag.NEW) and expr.getLabel() != tag.BOOLOP and expr.getLabel() != tag.INTOP):
             analyzer.lastTypeReturned = expr._type # antes: rType
-            
+            if(expr._type in ['Bool', 'Int', 'String']):
+                analyzer.lastValue = expr.name
         else:
             # Caso não seja nenhum terminal, é possível que seja alguma expressão sem recursão
             analyzer.lastTypeReturned = eval(str(expr.getLabel().name)+"(expr)")   # antes: rType
             # analyzer.lastTypeReturned = exprAnalyzer(expr) # Funciona com essa chamda também # antes: rType
 
     return analyzer.lastTypeReturned # antes: rType
-
-def CASE        (e:Node):
-    pass
-def CASEOPT     (e:Node):
-    pass
-def DOT         (e:Node):
-    pass
-def EXPRL       (e:Node):
-    pass
-def FUNCALL     (e:Node):
-    pass
-def FUNCALLID   (e:Node):
-    pass
 def IF          (e:Node):
     '''
     Só faz verificação das expressões
     '''
-    rType = [0,0,0]
+    rType = [0,0,0] # tipos retornados de cada expressão da estrutura if (3)
+    rValue = [0,0,0] # valor retornado em cada expressão
     for i, c in enumerate(e.children):
-        rType[i] = exprAnalyzer(c)  # antes: rType
+        rType[i] = exprAnalyzer(c) 
+        rValue[i] = analyzer.lastValue
 
         # verificar se tipo retornado corresponde ao tipo do atributo
-        if (i == 0 and not analyzer.compatibleType(e._type, rType[i])): # depois por mensagem já no método de uma vez, só muda a mensagem de erro # antes: rType
+        if (i == 0 and not analyzer.compatibleType(e._type, analyzer.lastTypeReturned)): # depois por mensagem já no método de uma vez, só muda a mensagem de erro # antes: rType
             analyzer.addError(f"<{e.line}> The <expr> {i+1} returned {rType[i]} but Bool was expected.") # antes: rType
     
-    if(e.children[0].name == 'true'):
+    if(rValue[0] == True or rValue[0] == "true"):
+        print(f"<{e.line}> If returned {str((rValue[1])).lower() if rValue[1] in [True,False] else rValue[1]}")
         analyzer.lastTypeReturned = rType[1]
         return rType[1]
     else:
+        print(f"<{e.line}> If returned {str(rValue[2]).lower() if rValue[2] in [True,False] else rValue[2]}")
         analyzer.lastTypeReturned = rType[2]
         return rType[2] 
-def ISVOID      (e:Node):
-    pass
-def INTEGER     (e:Node):
-    pass
-def LET         (e:Node):
-    pass
-def LETOPT      (e:Node):
-    pass
-def METHOD      (e:Node):
-    pass
-def NEW         (e:Node):
-    pass
-def NOT         (e:Node):
-    pass
-def OPE         (e:Node):
-    pass
+def WHILE       (e:Node):
+    '''
+    Só faz verificação das expressões
+    '''
+    rType = [0,0] # tipos retornados de cada expressão da estrutura while (2)
+    rValue = [0,0] # valor retornado em cada expressão
+    for i, c in enumerate(e.children):
+        rType[i] = exprAnalyzer(c) 
+        rValue[i] = analyzer.lastValue
+
+    # verificar se tipo retornado corresponde ao tipo do atributo
+    if (not analyzer.compatibleType(e._type, rType[0])): # depois por mensagem já no método de uma vez, só muda a mensagem de erro # antes: rType
+        analyzer.addError(f"<{e.line}> First while branch returned {rType[0]} but Bool was expected.") # antes: rType
+    
+    return rType[1]
 def BOOLOP         (e:Node):
     '''
     SOBRE
     -----
     Função para verificação de expressão de operações matemáticas <,<=,=   
     Deverá ser verificado:
-     - Se o tipo retornado da expressão expr em -> expr<OP> é do tipo Int
+     - Se o tipo retornado da expressão expr em -> expr<OP> é do tipo Int !!!! Pode ter qualquer tipo
      - Se o tipo retornado da expr em --> <OP>expr é do tipo Int
 
      RETORNO
      --------
      - Tipo Bool
     '''
-    if(e.getName()!="not"):
+    if(e.getName()!="not" and e.getName()!="="): # not não tem expressão anterior ao keyword e = avalia a segunda expressão
         # Verifica tipo de expr da esquerda
         if(not analyzer.compatibleType('Int', analyzer.lastTypeReturned)):
             analyzer.addError(f"<{e.line}> The expression (<expr>{e.name}) was supposed to return Int, not {analyzer.lastTypeReturned}.")
+        else:
+            analyzer.computeResult = True
+            x = analyzer.lastValue 
+    
+    analyzer.computeResult = True # Calcular de fato o resultado
+    x, leftType = analyzer.lastValue, analyzer.lastTypeReturned 
+    '''
+    Guarda o valor e o tipo retornado da expressão da esquerda
+    Isso para saber se o valor da expressão da direita vai ser compatível com o anterior
+    '''
 
     # Verificar tipo de expr da direita
     for expr in e.children: # verifica cada expressão
         rType  = exprAnalyzer(expr) # antes: rType
-    
-    if(e.name == "not"):
+    if(e.name == "not"): # not não tem expressão antes do not
         comp = 'Bool'
+        x = analyzer.lastValue
     else:
-        comp = 'Int'
+        comp = leftType
+    
     if(not analyzer.compatibleType(comp, rType)): # antes: rType
         analyzer.addError(f"<{e.line}> The expression ({e.name}<expr>) was supposed to return {comp}, not {rType}.")
+    else: # fazer cálculo para saber o valor booleano retornado
+        comp = int if leftType=="Int" else str
+        analyzer.getResult(e.getName(), (comp)(x), (comp)(analyzer.lastValue))
 
     analyzer.lastTypeReturned = "Bool"
     return "Bool" # antes: rType
-
 def INTOP         (e:Node):
     '''
     SOBRE
@@ -337,7 +340,16 @@ def INTOP         (e:Node):
         # Verifica tipo de expr da esquerda
         if(not analyzer.compatibleType('Int', analyzer.lastTypeReturned)):
             analyzer.addError(f"<{e.line}> The expression (<expr>{e.name}) was supposed to return Int, not {analyzer.lastTypeReturned}.")
-    
+        else:
+                analyzer.computeResult = True
+                x = analyzer.lastValue 
+    analyzer.computeResult = True # Calcular de fato o resultado
+    x, leftType = analyzer.lastValue, analyzer.lastTypeReturned 
+    '''
+    Guarda o valor e o tipo retornado da expressão da esquerda
+    Isso para saber se o valor da expressão da direita vai ser compatível com o anterior
+    '''
+
     # Verificar tipo de expr da direita
     for expr in e.children: # verifica cada expressão
         rType  = exprAnalyzer(expr) # antes: rType
@@ -345,21 +357,53 @@ def INTOP         (e:Node):
     if(not analyzer.compatibleType('Int', rType)): # antes: rType
         analyzer.addError(f"<{e.line}> The expression ({e.name}<expr>) was supposed to return Int, not {rType}.")
         # analyzer.blockComparation = True
+    else: # fazer cálculo para saber o valor booleano retornado
+        analyzer.getResult(e.getName(), (int)(x), (int)(analyzer.lastValue))
 
     analyzer.lastTypeReturned = rType
     return rType # antes: rType
 
+# Faltando
+def ATTRIBUTE   (e:Node):
+    pass
+def ARGUMENT    (e:Node):
+    pass
+def CASE        (e:Node):
+    pass
+def CASEOPT     (e:Node):
+    pass
+def DOT         (e:Node):
+    pass
+def EXPRL       (e:Node):
+    pass
+def FUNCALL     (e:Node):
+    pass
+def FUNCALLID   (e:Node):
+    pass
+def LET         (e:Node):
+    pass
+def LETOPT      (e:Node):
+    pass
+def METHOD      (e:Node):
+    pass
 def PARENTHESIS (e:Node):
     pass
 def ASSIGNMENT  (e:Node):
     pass
-def STRING      (e:Node):
-    pass
-def TIDE        (e:Node):
-    pass
-def WHILE       (e:Node):
-    pass
+
+
 def ID(e:Node):
+    # procurar se atrobuto existe no escopo (classe)
+    # Procura nos atributos classe atual
+    # Proocura nos formals do método atual
+    
+    # Procura nos atributos da classe herdada
+    # Procura nos formals da classe herdada
+
+    # se não encontrado: mensagem de erro
+
+    # se achado: seta como últimos Tipo e valor encontrados
+    # retorna esses valores
     pass
 # criar tabela hash para cada função
 def exprAnalyzer(expr: Node):
@@ -382,16 +426,20 @@ def exprAnalyzer(expr: Node):
     """
     if(expr.getLabel() == tag.ISVOID):
         for e in expr.children:
-            exprAnalyzer(e)
-        analyzer.lastTypeReturned = expr._type
+            rType = exprAnalyzer(e)
+        print(">>>>>>>>>> ",analyzer.lastTypeReturned)
+        print(">>>>>>>>>> ",rType)
+        
         return expr._type
     elif(expr.getLabel() in [tag.BOOL, tag.INTEGER, tag.STRING] or expr.getLabel() == tag.NEW):
         analyzer.lastTypeReturned = expr._type
-
+        if(not expr.getLabel() == tag.NEW):
+            analyzer.lastValue = expr.name
         if(expr.children!=[]):
             for e in expr.children:
                 rType = exprAnalyzer(e)
         return expr._type # retorna tipo # antes: rType
+
     else:
         rType = eval(f"{str(expr.getLabel().name)}(expr)") # pega nome da tag e faz xhamada da função específica # antes: rType
         analyzer.lastTypeReturned = rType
