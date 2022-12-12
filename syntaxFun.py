@@ -76,7 +76,7 @@ def ID_func(data, myTree):
     tmp.setLabel(st.tag.ID)
     tmp.setName(data[0].token.token)
     tmp.setLine(data[0].token.line)
-    tmp.setType("Void")
+    tmp.setType("-")
     data[0].nexToken(PC.SIG.TokenFound)
     if(data[0].situation == PC.SIG.EndOfProgram): 
         myTree.addChild(tmp)
@@ -199,7 +199,7 @@ def WHILE_func(data, myTree):
     tmp.setLabel(st.tag.WHILE)
     tmp.setName(data[0].token.token)
     tmp.setLine(data[0].token.line)
-    tmp.setType("None")
+    tmp.setType("Bool")
 
     # consome token lido
     data[0].nexToken(data[0].situation)
@@ -207,7 +207,8 @@ def WHILE_func(data, myTree):
     
     # cria filho 1
     data, tmp = expr(data, tmp) # chama expressão
-    data, tmp = expr_line(data, tmp) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+    data, aux = expr_line(data, tmp.children[-1])  # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+    tmp.children[-1] = aux
 
     # Verificar Loop
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'loop' expected after 'while' structure condition",
@@ -217,7 +218,8 @@ def WHILE_func(data, myTree):
     # cria filho 2
         
     data, tmp = expr(data, tmp) # chama expressão
-    data, tmp = expr_line(data, tmp) # recursão à esquerda
+    data, aux = expr_line(data, tmp.children[-1])  # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
+    tmp.children[-1] = aux
 
     # Verificar Pool
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'pool' was expected to close 'while' structure",
@@ -906,6 +908,10 @@ def expr(data, myTree, setErr=False):
     Pensar ainda em como vai ocorrer a ligação dos símbolos terminais
         - depende do nó anterior de um outro contexto?
         - em qual nó irei ligar?
+
+    TO DO
+    -----
+    - Otimmizar depois com eval as chamadas
     """
     # Terminais
     if(data[0].token.idEqual(Ids.INTEGER_ID) or data[0].token.idEqual(Ids.STRING_ID) or data[0].token.idEqual(Ids.TRUE_ID) or data[0].token.idEqual(Ids.FALSE_ID)):
@@ -925,7 +931,6 @@ def expr(data, myTree, setErr=False):
         return data, myTree
 
     # Recursões a direita
-    
     if(data[0].token.idEqual(Ids.ID_ID)):  
         data, myTree = ID_func(data, myTree) #ID
         setErr = False
