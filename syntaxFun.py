@@ -123,10 +123,11 @@ def IF_func(data, myTree):
                 expr1  expr2  expr3    3 filhos
     """
     # cria raiz do tipo IF
-    tmp = st.Node()
+    tmp:st.Node = st.Node()
     tmp.children = []
     tmp.setLabel(st.tag.IF)
     tmp.setName(data[0].token.token)
+    tmp.setType("Bool")
     tmp.setLine(data[0].token.line)
 
     # consome token lido
@@ -135,7 +136,8 @@ def IF_func(data, myTree):
 
     # cria filho 1
     data, tmp = expr(data, tmp) # chama expressão
-    data, tmp = expr_line(data, tmp) # recursão à esquerda
+    data, aux = expr_line(data, tmp.children[-1]) # recursão à esquerda
+    tmp.children[-1] = aux
 
     # Verifica Then
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'then' was expected after the 1° 'if' condition",
@@ -144,8 +146,8 @@ def IF_func(data, myTree):
 
     # cria filho 2
     data, tmp = expr(data, tmp) # chama expressão
-    data, tmp = expr_line(data, tmp) # recursão à esquerda
-
+    data, aux = expr_line(data, tmp.children[-1]) # recursão à esquerda -1 para fazer com que a próxima expressão não seja mais um filho do nó IF
+    tmp.children[-1] = aux
     # Verifica ELSE
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'else' was expected in 'if' structure",
     Ids.ELSE_ID, data)
@@ -153,8 +155,8 @@ def IF_func(data, myTree):
 
     # cria filho 3
     data, tmp = expr(data, tmp) # chama expressão
-    data, tmp = expr_line(data, tmp) # recursão à esquerda
-
+    data, aux = expr_line(data, tmp.children[-1]) # recursão à esquerda
+    tmp.children[-1] = aux
     # Verifica Fi
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: 'fi' was expected to close 'if' structure",
     Ids.FI_ID, data)
@@ -470,7 +472,7 @@ def ISVOID_func(data, myTree):
     tmp.children = []
     tmp.setLabel(st.tag.ISVOID)
     tmp.setName(data[0].token.token)
-    tmp.setType(data[0].token.token)
+    tmp.setType('Bool')
     tmp.setLine(data[0].token.line)
 
     data[0].nexToken(PC.SIG.TokenFound)
@@ -509,9 +511,9 @@ def NOT_func(data, myTree):
     # cria raiz
     tmp = st.Node()
     tmp.children = []
-    tmp.setLabel(st.tag.NOT)
+    tmp.setLabel(st.tag.BOOLOP)
     tmp.setName(data[0].token.token)
-    tmp.setType(data[0].token.token)
+    tmp.setType('Bool')
     tmp.setLine(data[0].token.line)
 
     data[0].nexToken(PC.SIG.TokenFound)
@@ -550,7 +552,7 @@ def TIDE_func(data, myTree):
     # cria raiz
     tmp = st.Node()
     tmp.children = []
-    tmp.setLabel(st.tag.TIDE)
+    tmp.setLabel(st.tag.INTOP)
     tmp.setName(data[0].token.token)
     tmp.setType(data[0].token.token)
     tmp.setLine(data[0].token.line)
