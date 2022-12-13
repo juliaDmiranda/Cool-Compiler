@@ -51,13 +51,20 @@ class Method(Feature):
         self.formals = _formals
         self.qtdFormal = len(self.formals)
         self.line = line
-
+        self.formalsValue = [None] * len(self.formals) # para os formals que durante o programa tiveram valores alterados
+    
     def show(self):
         print(f"(M) {self.name}-{self._type}")
         if(self.formals != []):
             print(str(self.formals))
 
-
+    def setValue(self, value, formal):
+        '''
+        Durante a análise semântica a variável pode receber alguma atribuição
+        '''
+        self.formalsValue[self.formals.index(formal)] =  value
+    def getValue(self, formal):
+        return self.formalsValue[self.formals.index(formal)]
     def toTree(self, noden):
         self.node = noden
 
@@ -69,6 +76,7 @@ class Attribute(Feature):
     node    = None
     line    = 0
     scopeId = 0
+    value   = 0
     def __init__(self, _name, _type, line, _id, duplicated = False) -> None:
         super().__init__(_name, _type)
         self.scopeId = _id
@@ -77,7 +85,13 @@ class Attribute(Feature):
 
     def show(self):
         print("(A) " + super().__str__())
-
+    def setValue(self, value):
+        '''
+        Durante a análise semântica a variável pode receber alguma atribuição
+        '''
+        self.value = value
+    def getValue(self):
+        return self.value
     def toTree(self, noden):
         self.node = noden
 
@@ -165,7 +179,7 @@ IO_class.methods = [
     Method("in_string"   , "String"      ,  []                  ,1002, 'MBC'),
     Method("in_int"      , "Int"         ,  []                  ,1002, 'MBC')
 ]
-Int_class       = Type("Int"     , 1003, 'BC')
+
 
 String_class    = Type("String"  , 1004, 'BC')
 String_class.methods = [
@@ -174,6 +188,7 @@ String_class.methods = [
     Method("substr" , "String" ,  [('i','Int'),('l','Int')]   ,1001, 'MBC')
 ]
 Bool_class      = Type("Bool"    , 1005, 'BC')
+Int_class       = Type("Int"     , 1003, 'BC')
 
 class Creator():
     '''
