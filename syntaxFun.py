@@ -73,7 +73,11 @@ def ID_func(data, myTree):
     # adicionar raiz
     tmp = st.Node()
     tmp.children = []
-    tmp.setLabel(st.tag.ID)
+    if(data[0].token.token == 'self'):
+        tmp.setLabel(st.tag.SELF_TYPE)
+    else:
+        tmp.setLabel(st.tag.ID)
+        
     tmp.setName(data[0].token.token)
     tmp.setLine(data[0].token.line)
     tmp.setType("-")
@@ -609,14 +613,10 @@ def O_PARENTHESIS_func(data, myTree):
     while True:    
         data, tmp = expr(data, tmp) # chama expressão
         data, tmp = expr_line(data, tmp) # recursão à esquerda ## garantir que se não tiver, não irá atrapalhar o resto da estrutura!
-
-        if(not data[0].token.idEqual(Ids.COMMA_ID)):
-            break
-        
+        if(not data[0].token.idEqual(Ids.COMMA_ID)):  break
         data[0].nexToken(PC.SIG.TokenFound)
-        myTree.addChild(tmp)
-        if(data[0].situation == PC.SIG.EndOfProgram): 
-            return data, myTree
+        if(data[0].situation == PC.SIG.EndOfProgram):  return data, myTree
+        # myTree.addChild(tmp) # causava argumento repetido
     data, _ = checkToken_N_reportSyntError(f"line {data[0].token.line}: ')' was expected to close '(expr)' structure",
     Ids.C_PARENTHESIS, data)# Verifica )
     if(data[0].situation == PC.SIG.EndOfProgram): # DEsnecess[ario (?)]

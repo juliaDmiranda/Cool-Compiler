@@ -7,7 +7,9 @@ import semAnalyzer as SEA
 try:
     fileName    =  sys.argv[1]
 except:
-    fileName      =  "cool_programs/book.cl"
+    # fileName      =  "exemplos/ex1.cl"
+    fileName      =  "exemplos/cTb1.cl"
+    # fileName      =  "cool_programs/book.cl"
 
 
 tokens = LA.readNtokenize(fileName)   # Análise léxica
@@ -21,11 +23,11 @@ try:
 
     typeList, synTree, synErr = SYA.switchTokens(l) # Análise Sintática
 
-    # SYA.showErrors(synErr)  # printa erros
-    # typeList.printTypes()   # prita lista de tipos
-    SYA.showTree(synTree)   # passa para arquivo
+    SYA.showErrors(synErr)  
+    # typeList.printTypes() 
+    SYA.showTree(synTree)   
     
 except StopIteration:
     print("Erro")
 
-SEA.main(typeList, synTree) # Análise semântica
+SEA.sem(typeList, synTree) # Análise semântica

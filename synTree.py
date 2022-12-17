@@ -33,12 +33,12 @@ class tag (Enum):
     STRING      = auto()
     TIDE        = auto()
     WHILE       = auto()
+    SELF_TYPE   = auto()
 class Node():
     id_obj = itertools.count()
     label, token ,children,_type, line = None,None, [], "-", None # para a análise semântica
     name = ""
     father = "-"
-
     def __init__ (self):
         self.id = next(Node.id_obj)
 
