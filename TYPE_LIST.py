@@ -9,7 +9,7 @@ class Feature():
     name = ""
     _type = None
     line = 0
-    duplicated  = False # informa se a feauture já foi definido antes e está repetido
+    duplicated  = False 
 
     def __init__(self, _name, _type) -> None:
         self.setName(_name)
@@ -32,14 +32,14 @@ class Feature():
         else: return False
 
     def __str__(self) -> str:
-        return f" {self.name}-{self._type}\n"
+        return f" {self.name}-{self._type}<id: {self.scopeId}>\n"
 
 
 class Method(Feature):
     """
     Classe responsável por armazenar informações de um método
     """
-    # name, _type = "","" 
+    
     formals     = []
     qtdFormal   = 0
     scopeId     = 0
@@ -51,22 +51,33 @@ class Method(Feature):
         self.formals = _formals
         self.qtdFormal = len(self.formals)
         self.line = line
-        self.formalsValue = [None] * len(self.formals) # para os formals que durante o programa tiveram valores alterados
+        self.formalsValue = [None] * len(self.formals) 
     
     def show(self):
-        print(f"(M) {self.name}-{self._type}")
+        print(f"(M) {self.name}-{self._type}<id: {self.scopeId}>")
         if(self.formals != []):
-            print(str(self.formals))
+            print(str(self.formals),"-", str(self.formalsValue))
 
-    def setValue(self, value, formal):
+    def setValue(self, value, formal, funCall = False):
         '''
         Durante a análise semântica a variável pode receber alguma atribuição
         '''
         self.formalsValue[self.formals.index(formal)] =  value
+
+        
     def getValue(self, formal):
-        return self.formalsValue[self.formals.index(formal)]
+        if(not isinstance(formal, tuple)):
+            index =[i for i,j in enumerate(self.formals) if j[0] == formal]
+            if(index):
+                return self.formalsValue[index[0]]
+            else:
+                []
+        else:
+            return self.formalsValue[self.formals.index(formal)], self.formals[self.formals.index(formal)][1]
+    
     def toTree(self, noden):
         self.node = noden
+    
 
 
 class Attribute(Feature):
@@ -107,13 +118,13 @@ class Type():
     
     def __init__(self, _name, _id,line, _parent = ""):
         self.name   = _name
-        if(_parent != ""): self.parent = _parent
+        self.parent = _parent
         self.scopeId = _id
         self.line = line
 
     def newMethod(self,name, _type, _formals,line, scope_id):
-        # verifica se o método já foi definido
-        if(len([x for x in self.methods if name == x.name])!=0): # checar se já foi definida feauture com esse nome
+        
+        if(len([x for x in self.methods if name == x.name])!=0): 
             self.methods.append(Method(name, _type, _formals,line, scope_id, True))
         else:
             self.methods.append(Method(name, _type, _formals,line, scope_id))
@@ -121,8 +132,8 @@ class Type():
     def alreadyDefined(self):
         self.duplicated = True
 
-    def newAttribute(self, name, _type, line, _id):
-        if(len([x for x in self.attributes if name == x.name])!=0):  # checar se já foi definida feauture com esse nome
+    def newAttribute(self, name, _type, _id, line):
+        if(len([x for x in self.attributes if name == x.name])!=0):  
             self.attributes.append(Attribute(name, _type, line, _id, True))
         else:
             self.attributes.append(Attribute(name, _type, line, _id))
@@ -150,11 +161,13 @@ class Type():
         * [Attribute] -> see o atributo existe
         '''
         return [a for a in self.attributes if attributeName == a.name]
+    def methodIndex(self, name):
+        return [index for index, meth in zip(enumerate(self.methods),self.methods) if meth.name == name][0][0]
 
         
         
     def show(self):
-        print(f"(T) {self.name}({self.parent})")
+        print(f"(T) {self.name}({self.parent})<id: {self.scopeId}>")
         
         if(self.methods !=[]):
             for m in self.methods:
@@ -164,7 +177,7 @@ class Type():
             for a in self.attributes:
                 a.show()
 
-# Criando as Basic Classes
+
 Object_class    = Type("Object"  , 1001, 'BC')
 Object_class.methods = [
     Method("about"          , "Object"      ,  []   ,1001, 'MBC'),
@@ -218,8 +231,11 @@ class Creator():
         else:
             print(f" len == {len([_type.name for _type in self.typeList if _type.name.lower() == obj.name.lower()])}")
             False
+    def getClassIndex(self, className):
 
-    def getClass(self, name, _id=-1): # retorna quantas vezes a classe foi encontrada e o objeto inteiro
+        return [index for index, class_ in zip(enumerate(self.typeList),self.typeList) if class_.name == className][0][0]
+
+    def getClass(self, name, _id=-1): 
         '''
         Parâmetro:
         ----------
